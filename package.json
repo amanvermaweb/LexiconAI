@@ -11,7 +11,8 @@
   "dependencies": {
     "mongodb": "^7.0.0",
     "mongoose": "^9.0.1",
-    "next": "16.0.4",
+    "next": "^16.0.10",
+    "openai": "^6.13.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
