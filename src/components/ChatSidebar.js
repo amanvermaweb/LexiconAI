@@ -9,7 +9,7 @@ const ChatSidebar = () => {
     <aside className="flex h-screen w-full flex-col border-r border-zinc-200 p-4 dark:border-zinc-800 md:w-80">
       <div className="flex items-center gap-3 border-b border-zinc-200 pb-3 dark:border-zinc-800">
         <Image
-          src="/logo.png"
+          src="/icons/logo.svg"
           alt="LexiconAI Logo"
           width={42}
           height={42}
