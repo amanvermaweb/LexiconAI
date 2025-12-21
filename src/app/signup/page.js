@@ -1,15 +1,13 @@
 import React from "react";
 
-const signin = () => {
+const signup = () => {
   const InputClass =
-    "w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black";
+    "w-full px-4 py-2 border rounded-lg focus:outline-white focus:ring-2 focus:ring-black";
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md rounded-xl shadow-white shadow-md p-8">
         <h1 className="text-2xl font-bold text-center">LexiconAI</h1>
-
         <p className="text-center text-gray-500 mt-1">Create your account</p>
-
         <form className="mt-6 space-y-4">
           <input type="text" placeholder="Full Name" className={InputClass} />
 
@@ -46,4 +44,4 @@ const signin = () => {
   );
 };
 
-export default signin;
+export default signup;

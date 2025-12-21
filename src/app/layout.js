@@ -14,7 +14,28 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                try {
+                  const stored = localStorage.getItem("theme") || "system";
+                  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                  const theme = stored === "system" ? (prefersDark ? "dark" : "light") : stored;
+
+                  if (theme === "dark") {
+                    document.documentElement.classList.add("dark");
+                  } else {
+                    document.documentElement.classList.remove("dark");
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${poppins.variable} antialiased`}>{children}</body>
     </html>
   );

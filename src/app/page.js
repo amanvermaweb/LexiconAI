@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-black">
+    <div className=" min-h-screen bg-zinc-50 dark:bg-black grid grid-cols-[30%_1fr] grid-rows-[1fr]">
       <ChatSidebar />
       <main className="flex flex-1 items-center justify-center">
         <Navbar />

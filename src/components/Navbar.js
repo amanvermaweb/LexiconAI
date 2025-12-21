@@ -3,8 +3,8 @@ import Link from 'next/link'
 
 const Navbar = () => {
   return (
-    <div className='flex'>
-      <select name="model-selector" id="model-selector">
+    <nav className='flex justify-between items-center p-4 bg-gray-200 dark:bg-gray-800'>
+      <select name="model-selector" id="model-selector" className='bg-black'>
         <option value="gpt">GPT</option>
         <option value="claude">Claude</option>
         <option value="perplexity">Perplexity</option>
@@ -13,7 +13,7 @@ const Navbar = () => {
         <Link href="/signin">Sign In</Link>
         <Link href="/register">Register</Link>
       </div>
-    </div>
+    </nav>
   )
 }
 
