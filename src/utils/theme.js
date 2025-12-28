@@ -5,19 +5,16 @@ export const getStoredTheme = () => {
   return localStorage.getItem("theme") || "system";
 };
 
-export const getSystemTheme = () =>
-  window.matchMedia("(prefers-color-scheme: dark)").matches
+export const getSystemTheme = () => {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
+};
 
 export const applyTheme = (theme) => {
-  const resolved =
-    theme === "system" ? getSystemTheme() : theme;
-
-  document.documentElement.classList.toggle(
-    "dark",
-    resolved === "dark"
-  );
+  const resolved = theme === "system" ? getSystemTheme() : theme;
+  document.documentElement.classList.toggle("dark", resolved === "dark");
 };
 
 export const setTheme = (theme) => {

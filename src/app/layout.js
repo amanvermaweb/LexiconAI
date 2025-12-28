@@ -23,7 +23,9 @@ export default function RootLayout({ children }) {
                 try {
                   const stored = localStorage.getItem("theme") || "system";
                   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-                  const theme = stored === "system" ? (prefersDark ? "dark" : "light") : stored;
+                  const theme = stored === "system"
+                    ? (prefersDark ? "dark" : "light")
+                    : stored;
 
                   if (theme === "dark") {
                     document.documentElement.classList.add("dark");
