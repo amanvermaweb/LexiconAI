@@ -12,15 +12,15 @@ const Home = () => {
   // if (!session) redirect("/login");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
-  <div className="flex min-h-screen bg-transparent text-slate-900 dark:text-white">
+  <div className="flex min-h-dvh bg-transparent text-slate-900 dark:text-white">
       <ChatSidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       <main
         className={`relative flex flex-1 flex-col items-center w-full overflow-hidden transition-all duration-300 ease-in-out
-      ${sidebarOpen ? "md:ml-[30%]" : "md:ml-0"}`}
+      ${sidebarOpen ? "md:ml-72 lg:ml-80" : "md:ml-0"}`}
       >
         <Navbar onToggleSidebar={() => setSidebarOpen(true)} />
-        <section className="relative z-10 flex flex-1 w-full items-center justify-center px-4">
-          <div className="w-full max-w-3xl rounded-3xl border border-slate-200/70 bg-white/80 p-8 shadow-[0_18px_60px_rgba(0,0,0,0.15)] backdrop-blur-xl sm:p-10 dark:border-white/10 dark:bg-white/5 dark:shadow-[0_18px_60px_rgba(0,0,0,0.35)]">
+        <section className="relative z-10 flex flex-1 w-full items-center justify-center px-4 py-6 sm:py-10">
+          <div className="w-full max-w-3xl rounded-3xl border border-slate-200/70 bg-white/80 p-6 sm:p-10 shadow-[0_18px_60px_rgba(0,0,0,0.15)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:shadow-[0_18px_60px_rgba(0,0,0,0.35)]">
             <h2 className="mb-3 text-center text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight bg-linear-to-r from-indigo-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent drop-shadow-lg">
               Welcome to LexiconAI
             </h2>

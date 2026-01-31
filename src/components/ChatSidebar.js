@@ -4,20 +4,20 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MessageCircle, Settings, User } from "./Icons";
 import useChat from "@/hooks/useChat";
+import { useSession } from "next-auth/react";
 
 const ChatSidebar = ({ open, setOpen }) => {
   const params = useParams();
   const chatId = params?.chatId;
   const { chats, isLoading, error } = useChat();
-  const user = {
-    name: "John Doe",
-  };
+  const { data: session } = useSession();
+  const userName = session?.user?.name || "Guest";
   return (
     <aside
       className={`
     fixed md:static
     top-0 left-0
-    h-screen w-full md:w-[25%]
+  min-h-dvh w-full md:w-72 lg:w-80
     border-r border-slate-200/70 bg-white/80 backdrop-blur-xl text-slate-900
   dark:border-white/10 dark:bg-white/5 dark:text-white
     transition-all duration-300 ease-in-out
@@ -39,8 +39,8 @@ const ChatSidebar = ({ open, setOpen }) => {
           <Image
             src="/icons/logo.svg"
             alt="LexiconAI Logo"
-            width={42}
-            height={42}
+            width={38}
+            height={38}
           />
           <div className="flex flex-col leading-tight">
             <h1 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -115,7 +115,7 @@ const ChatSidebar = ({ open, setOpen }) => {
             <User />
           </div>
           <div className="flex-1 overflow-hidden">
-            <div className="text-md font-medium truncate text-slate-900 dark:text-white">{`${user.name}`}</div>
+            <div className="text-md font-medium truncate text-slate-900 dark:text-white">{userName}</div>
             <div className="text-xs text-slate-500 truncate dark:text-white/50">
               Free plan
             </div>

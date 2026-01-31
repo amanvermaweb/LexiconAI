@@ -1,4 +1,4 @@
-# LexiconAI (Currently Working On)
+# LexiconAI (WIP)
 
 LexiconAI is a full-stack AI chat platform similar to ChatGPT, supporting multiple AI providers like OpenAI, Claude and Perplexity. It features real-time responses, chat histories, API key storage, and a clean modern UI built with React and Tailwind CSS.
 
@@ -26,20 +26,20 @@ LexiconAI is a full-stack AI chat platform similar to ChatGPT, supporting multip
 
 1. Clone the repository:
 
-```
-git clone https://github.com/amanverma2009/lexiconai.git
+```cd
+git clone https://github.com/amanvermadev/lexiconai.git
 cd lexiconai
 ```
 
 2. Install dependencies:
 
-```
+```cd
 npm install
 ```
 
 3. Create `.env.local`:
 
-```
+```txt
 NEXTAUTH_SECRET=your-secret
 NEXTAUTH_URL=http://localhost:3000
 MONGODB_URI=your-mongodb-uri
@@ -48,7 +48,7 @@ ENCRYPTION_KEY=32-byte-key
 
 4. Run the development server:
 
-```
+```cd
 npm run dev
 ```
 

@@ -1,13 +1,65 @@
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { User } from "@/components/Icons";
 import SecondaryBtn from "@/components/SecondaryBtn";
 
-const page = () => {
-  const user = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    plan: "Pro Plan",
-    joined: "March 2024",
-  };
+const AccountPage = () => {
+  const { data: session, status } = useSession();
+  const [usage, setUsage] = useState({ chats: 0, messages: 0 });
+  const [usageLoading, setUsageLoading] = useState(false);
+  const [usageError, setUsageError] = useState(null);
+
+  const user = useMemo(() => {
+    return {
+      name: session?.user?.name || "Guest",
+      email: session?.user?.email || "Sign in to view your account",
+      plan: "Free Plan",
+    };
+  }, [session]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUsage = async () => {
+      setUsageLoading(true);
+      setUsageError(null);
+
+      try {
+        const response = await fetch("/api/usage");
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload?.error || "Unable to load usage.");
+        }
+
+        if (isMounted) {
+          setUsage({
+            chats: payload?.chatsCount ?? 0,
+            messages: payload?.messagesCount ?? 0,
+          });
+        }
+      } catch (error) {
+        if (isMounted) {
+          setUsageError(error?.message || "Unable to load usage.");
+        }
+      } finally {
+        if (isMounted) {
+          setUsageLoading(false);
+        }
+      }
+    };
+
+    if (session?.user) {
+      loadUsage();
+    } else {
+      setUsageLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [session]);
   return (
     <div className="space-y-8 p-6">
       <div>
@@ -32,16 +84,31 @@ const page = () => {
               {user.email}
             </p>
             <p className="text-slate-500 text-xs mt-0.5 dark:text-white/45">
-              {user.plan} • Joined {user.joined}
+              {user.plan}
             </p>
           </div>
         </div>
       </section>
 
+      {status !== "loading" && !session?.user && (
+        <section className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+          <p className="text-sm text-slate-600 dark:text-white/60">
+            Sign in to manage your account details and view your usage.
+          </p>
+          <button
+            type="button"
+            onClick={() => signIn("github", { callbackUrl: "/settings/account" })}
+            className="mt-4 inline-flex items-center justify-center rounded-2xl bg-linear-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-purple-700"
+          >
+            Continue with GitHub
+          </button>
+        </section>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <section className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
           <div className="text-2xl font-extrabold text-slate-900 dark:text-white">
-            1,247
+            {usageLoading ? "—" : usage.messages}
           </div>
           <div className="text-sm text-slate-600 dark:text-white/55">
             Messages sent
@@ -49,13 +116,19 @@ const page = () => {
         </section>
         <section className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
           <div className="text-2xl font-extrabold text-slate-900 dark:text-white">
-            89
+            {usageLoading ? "—" : usage.chats}
           </div>
           <div className="text-sm text-slate-600 dark:text-white/55">
             Conversations
           </div>
         </section>
       </div>
+
+      {usageError && (
+        <div className="rounded-2xl border border-rose-200/70 bg-rose-50/80 px-4 py-3 text-sm text-rose-600 shadow-sm dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-200">
+          {usageError}
+        </div>
+      )}
 
       <section className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
         <div className="space-y-3">
@@ -70,4 +143,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default AccountPage;

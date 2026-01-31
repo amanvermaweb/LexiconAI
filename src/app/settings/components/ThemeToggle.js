@@ -42,7 +42,7 @@ export default function ThemeToggle() {
               ${
                 active === theme
                   ? "bg-linear-to-r from-blue-600 to-purple-600 text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-100/80 dark:text-white/70 dark:hover:bg-white/10"
+                  : "text-slate-600 hover:bg-slate-100/80 dark:text-white/70 dark:hover:bg-white/10 border "
               }`}
             value={theme}
           >

@@ -2,7 +2,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
+  --background: #f8fafc;
   --foreground: #171717;
 
   --brand-from: #2563eb;
@@ -50,6 +50,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-poppins), sans-serif;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 ::selection {
@@ -78,6 +80,18 @@ body {
       transparent 60%
     );
   background-attachment: fixed;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 640px) {
+  body {
+    background-attachment: scroll;
+  }
 }
 
 :where(a, button, input, textarea, select, [role="button"]):focus-visible {
