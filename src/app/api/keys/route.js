@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { connectDB } from "@/server/lib/mongodb";
-import Chat from "@/server/models/Chat";
 import { authOptions } from "@/server/lib/auth";
+import { connectDB } from "@/server/lib/mongodb";
+import UserKey from "@/server/models/UserKey";
 
 export async function GET() {
   try {
@@ -14,21 +14,19 @@ export async function GET() {
     }
 
     await connectDB();
-    const chats = await Chat.find({ userId })
-      .sort({ updatedAt: -1 })
-      .select({ title: 1, updatedAt: 1 })
-      .lean();
 
-    const payload = chats.map((chat) => ({
-      id: chat._id.toString(),
-      title: chat.title,
-      updatedAt: chat.updatedAt,
+    const keys = await UserKey.find({ userId }).lean();
+
+    const providers = keys.map((entry) => ({
+      provider: entry.provider,
+      lastFour: entry.lastFour || null,
+      updatedAt: entry.updatedAt,
     }));
 
-    return NextResponse.json({ chats: payload });
+    return NextResponse.json({ providers });
   } catch (error) {
     return NextResponse.json(
-      { error: error?.message || "Failed to load chats." },
+      { error: error?.message || "Failed to load key metadata." },
       { status: 500 }
     );
   }

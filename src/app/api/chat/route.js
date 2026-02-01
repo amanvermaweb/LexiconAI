@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { connectDB } from "@/server/lib/mongodb";
 import Chat from "@/server/models/Chat";
 import Message from "@/server/models/Message";
 import { createOpenAICompletion } from "@/server/services/openaiProxy";
+import { createGeminiCompletion } from "@/server/services/geminiProxy";
+import UserKey from "@/server/models/UserKey";
+import { decrypt } from "@/server/lib/crypto";
+import { authOptions } from "@/server/lib/auth";
 
 const serializeMessage = (message) => ({
   id: message._id.toString(),
@@ -13,6 +18,13 @@ const serializeMessage = (message) => ({
 
 export async function GET(request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get("chatId");
 
@@ -24,7 +36,14 @@ export async function GET(request) {
     }
 
     await connectDB();
-    const messages = await Message.find({ chatId })
+
+    const chat = await Chat.findOne({ _id: chatId, userId }).lean();
+
+    if (!chat) {
+      return NextResponse.json({ error: "Chat not found." }, { status: 404 });
+    }
+
+    const messages = await Message.find({ chatId, userId })
       .sort({ createdAt: 1 })
       .lean();
 
@@ -42,9 +61,15 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
     const body = await request.json();
     const content = body?.message?.trim();
-    const apiKey = body?.apiKey?.trim();
     const model = body?.model || "gpt";
 
     if (!content) {
@@ -54,37 +79,56 @@ export async function POST(request) {
       );
     }
 
-    if (!apiKey) {
+    const resolveProvider = (modelValue) => {
+      if (!modelValue) return "openai";
+      if (modelValue.startsWith("gemini")) return "gemini";
+      if (modelValue.startsWith("claude")) return "claude";
+      if (modelValue.startsWith("perplexity")) return "perplexity";
+      return "openai";
+    };
+
+    await connectDB();
+
+    const provider = resolveProvider(model);
+    const savedKey = await UserKey.findOne({ userId, provider }).lean();
+
+    if (!savedKey?.encryptedKey) {
       return NextResponse.json(
-        { error: "API key is required." },
+        { error: `No API key saved for ${provider}.` },
         { status: 400 }
       );
     }
 
-    await connectDB();
+  const apiKey = decrypt(savedKey.encryptedKey).replace(/\s+/g, "");
 
     let chat = null;
     let chatId = body?.chatId || null;
 
     if (chatId) {
-      chat = await Chat.findById(chatId);
+      chat = await Chat.findOne({ _id: chatId, userId });
+
+      if (!chat) {
+        return NextResponse.json({ error: "Chat not found." }, { status: 404 });
+      }
     }
 
     if (!chat) {
       chat = await Chat.create({
         title: content.slice(0, 60) || "New Chat",
         lastMessageAt: new Date(),
+        userId,
       });
       chatId = chat._id.toString();
     }
 
     await Message.create({
       chatId,
+      userId,
       role: "user",
       content,
     });
 
-    const contextMessages = await Message.find({ chatId })
+    const contextMessages = await Message.find({ chatId, userId })
       .sort({ createdAt: 1 })
       .limit(20)
       .lean();
@@ -94,11 +138,26 @@ export async function POST(request) {
       content: message.content,
     }));
 
-    const completion = await createOpenAICompletion({
-      apiKey,
-      model,
-      messages: openAiMessages,
-    });
+    let completion = null;
+
+    if (provider === "openai") {
+      completion = await createOpenAICompletion({
+        apiKey,
+        model,
+        messages: openAiMessages,
+      });
+    } else if (provider === "gemini") {
+      completion = await createGeminiCompletion({
+        apiKey,
+        model,
+        messages: openAiMessages,
+      });
+    } else {
+      return NextResponse.json(
+        { error: `Provider ${provider} is not supported yet.` },
+        { status: 400 }
+      );
+    }
 
     if (completion?.error) {
       return NextResponse.json({ error: completion.error }, { status: 400 });
@@ -106,6 +165,7 @@ export async function POST(request) {
 
     await Message.create({
       chatId,
+      userId,
       role: "assistant",
       content: completion.content,
     });
@@ -115,7 +175,7 @@ export async function POST(request) {
       title: chat.title || content.slice(0, 60),
     });
 
-    const messages = await Message.find({ chatId })
+    const messages = await Message.find({ chatId, userId })
       .sort({ createdAt: 1 })
       .lean();
 

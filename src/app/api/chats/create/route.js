@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { connectDB } from "@/server/lib/mongodb";
 import Chat from "@/server/models/Chat";
+import { authOptions } from "@/server/lib/auth";
 
 export async function POST(request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
     const body = await request.json();
     await connectDB();
 
@@ -11,6 +20,7 @@ export async function POST(request) {
     const chat = await Chat.create({
       title,
       lastMessageAt: null,
+      userId,
     });
 
     return NextResponse.json({

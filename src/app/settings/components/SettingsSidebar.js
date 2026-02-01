@@ -16,17 +16,18 @@ const SettingsSidebar = ({ open, setOpen }) => {
       className={`
     fixed md:static
     top-0 left-0
-  min-h-dvh w-full md:w-72 lg:w-80
+  h-dvh w-full md:w-72 lg:w-80
   border-r border-slate-200/70 bg-white/80 backdrop-blur-xl text-slate-900
   dark:border-white/10 dark:bg-white/5 dark:text-white
     transition-all duration-300 ease-in-out
     flex flex-col
+    overflow-hidden
     ${open ? "translate-x-0" : "-translate-x-full"}
     md:translate-x-0
     z-50
   `}
     >
-  <div className="w-full min-h-dvh border-r border-slate-200/70 bg-white/80 backdrop-blur-xl p-5 dark:border-white/10 dark:bg-white/5">
+  <div className="w-full h-full border-r border-slate-200/70 bg-white/80 backdrop-blur-xl p-5 dark:border-white/10 dark:bg-white/5">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => router.back()}

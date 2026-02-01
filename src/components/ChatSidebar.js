@@ -17,7 +17,7 @@ const ChatSidebar = ({ open, setOpen }) => {
       className={`
     fixed md:static
     top-0 left-0
-  min-h-dvh w-full md:w-72 lg:w-80
+    h-dvh w-full md:w-72 lg:w-80
     border-r border-slate-200/70 bg-white/80 backdrop-blur-xl text-slate-900
   dark:border-white/10 dark:bg-white/5 dark:text-white
     transition-all duration-300 ease-in-out
@@ -63,7 +63,7 @@ const ChatSidebar = ({ open, setOpen }) => {
         </Link>
       </div>
 
-      <div className="mt-6 flex-1 overflow-y-auto px-3">
+      <div className="mt-6 flex-1 overflow-y-auto px-3 overflow-x-hidden">
         <h2 className="mb-2 px-1 text-sm font-semibold tracking-wide text-slate-500 dark:text-white/70">
           History
         </h2>
@@ -75,11 +75,6 @@ const ChatSidebar = ({ open, setOpen }) => {
             </div>
           )}
 
-          {error && !isLoading && (
-            <div className="rounded-2xl px-3 py-2.5 text-rose-500">
-              {error}
-            </div>
-          )}
 
           {!isLoading && chats.length === 0 && (
             <div className="rounded-2xl px-3 py-2.5 text-slate-500 dark:text-white/60">
@@ -110,7 +105,7 @@ const ChatSidebar = ({ open, setOpen }) => {
           <Settings />
           <span className="text-sm font-medium">Settings</span>
         </Link>
-        <div className="mt-3 flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/5">
+        <Link href="/settings/account" className="mt-3 flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/5">
           <div className="w-10 h-10 rounded-full bg-linear-to-tr from-slate-200 to-slate-300 border border-slate-200 overflow-hidden flex items-center justify-center dark:from-zinc-700 dark:to-zinc-600 dark:border-white/10">
             <User />
           </div>
@@ -120,7 +115,7 @@ const ChatSidebar = ({ open, setOpen }) => {
               Free plan
             </div>
           </div>
-        </div>
+        </Link>
       </div>
     </aside>
   );

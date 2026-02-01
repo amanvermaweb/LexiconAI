@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/server/lib/auth";
 import { connectDB } from "@/server/lib/mongodb";
 import Chat from "@/server/models/Chat";
-import { authOptions } from "@/server/lib/auth";
+import Message from "@/server/models/Message";
 
 export async function GET() {
   try {
@@ -14,21 +15,23 @@ export async function GET() {
     }
 
     await connectDB();
-    const chats = await Chat.find({ userId })
-      .sort({ updatedAt: -1 })
-      .select({ title: 1, updatedAt: 1 })
-      .lean();
 
-    const payload = chats.map((chat) => ({
-      id: chat._id.toString(),
-      title: chat.title,
-      updatedAt: chat.updatedAt,
-    }));
+    const [chats, messages] = await Promise.all([
+      Chat.find({ userId }).sort({ updatedAt: -1 }).lean(),
+      Message.find({ userId }).sort({ createdAt: 1 }).lean(),
+    ]);
 
-    return NextResponse.json({ chats: payload });
+    return NextResponse.json({
+      user: {
+        name: session?.user?.name || null,
+        email: session?.user?.email || null,
+      },
+      chats,
+      messages,
+    });
   } catch (error) {
     return NextResponse.json(
-      { error: error?.message || "Failed to load chats." },
+      { error: error?.message || "Failed to export data." },
       { status: 500 }
     );
   }

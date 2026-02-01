@@ -1,15 +1,10 @@
 "use client";
 import Navbar from "@/components/Navbar";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/server/lib/auth";
-import { redirect } from "next/navigation";
 import ChatSidebar from "@/components/ChatSidebar";
 import Link from "next/link";
 import { useState } from "react";
 
 const Home = () => {
-  // const session = await getServerSession(authOptions);
-  // if (!session) redirect("/login");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
   <div className="flex min-h-dvh bg-transparent text-slate-900 dark:text-white">
@@ -30,12 +25,19 @@ const Home = () => {
               ship faster with an elegant, distraction-free interface.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 md:hidden">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/chat"
                 className="inline-flex items-center justify-center rounded-full bg-white text-slate-900 px-6 py-2.5 text-sm font-semibold shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:bg-slate-100 dark:bg-white/10 dark:text-white dark:hover:bg-white/20 dark:shadow-slate-900/40"
               >
                 Start a new chat
+              </Link>
+
+              <Link
+                href="/signin"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200/80 bg-white/70 px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100/80 dark:border-white/15 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
+              >
+                Sign in to start chatting
               </Link>
 
               <Link

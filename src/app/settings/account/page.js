@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { User } from "@/components/Icons";
 import SecondaryBtn from "@/components/SecondaryBtn";
 
@@ -9,6 +9,8 @@ const AccountPage = () => {
   const [usage, setUsage] = useState({ chats: 0, messages: 0 });
   const [usageLoading, setUsageLoading] = useState(false);
   const [usageError, setUsageError] = useState(null);
+  const [actionStatus, setActionStatus] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const user = useMemo(() => {
     return {
@@ -60,6 +62,89 @@ const AccountPage = () => {
       isMounted = false;
     };
   }, [session]);
+
+  const handleChangePassword = async () => {
+    setActionStatus(null);
+    setActionLoading(true);
+    try {
+      const response = await fetch("/api/account/change-password", {
+        method: "POST",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload?.error || "Unable to update password.");
+      }
+
+      setActionStatus(payload?.message || "Password update request sent.");
+    } catch (error) {
+      setActionStatus(error?.message || "Unable to update password.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    setActionStatus(null);
+    setActionLoading(true);
+    try {
+      const response = await fetch("/api/account/export");
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload?.error || "Unable to export data.");
+      }
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "lexiconai-export.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setActionStatus("Export ready. Downloading now.");
+    } catch (error) {
+      setActionStatus(error?.message || "Unable to export data.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setActionStatus(null);
+
+    if (
+      !window.confirm(
+        "Delete all your chats and messages? This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const response = await fetch("/api/account/delete", {
+        method: "DELETE",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload?.error || "Unable to delete account data.");
+      }
+
+      setActionStatus("Account data deleted. Signing you out...");
+      await signOut({ callbackUrl: "/" });
+    } catch (error) {
+      setActionStatus(error?.message || "Unable to delete account data.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
   return (
     <div className="space-y-8 p-6">
       <div>
@@ -89,22 +174,6 @@ const AccountPage = () => {
           </div>
         </div>
       </section>
-
-      {status !== "loading" && !session?.user && (
-        <section className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
-          <p className="text-sm text-slate-600 dark:text-white/60">
-            Sign in to manage your account details and view your usage.
-          </p>
-          <button
-            type="button"
-            onClick={() => signIn("github", { callbackUrl: "/settings/account" })}
-            className="mt-4 inline-flex items-center justify-center rounded-2xl bg-linear-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-purple-700"
-          >
-            Continue with GitHub
-          </button>
-        </section>
-      )}
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <section className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
           <div className="text-2xl font-extrabold text-slate-900 dark:text-white">
@@ -132,13 +201,34 @@ const AccountPage = () => {
 
       <section className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
         <div className="space-y-3">
-          <SecondaryBtn content="Change Password" className="w-full" />
-          <SecondaryBtn content="Export Data" className="w-full" />
-          <button className="w-full rounded-2xl bg-red-500/10 hover:bg-red-500/15 border border-red-400/25 px-4 py-3 text-red-600 text-sm font-semibold transition-all duration-200 whitespace-nowrap dark:text-red-200/90 hover:cursor-pointer">
+          <SecondaryBtn
+            content="Change Password"
+            className="w-full"
+            onClick={handleChangePassword}
+            disabled={!session?.user || actionLoading}
+          />
+          <SecondaryBtn
+            content="Export Data"
+            className="w-full"
+            onClick={handleExportData}
+            disabled={!session?.user || actionLoading}
+          />
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            disabled={!session?.user || actionLoading}
+            className="w-full rounded-2xl bg-red-500/10 hover:bg-red-500/15 border border-red-400/25 px-4 py-3 text-red-600 text-sm font-semibold transition-all duration-200 whitespace-nowrap dark:text-red-200/90 hover:cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          >
             Delete Account
           </button>
         </div>
       </section>
+
+      {actionStatus && (
+        <div className="rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+          {actionStatus}
+        </div>
+      )}
     </div>
   );
 };

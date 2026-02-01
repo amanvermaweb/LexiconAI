@@ -42,7 +42,9 @@ const MessageInput = ({ onKeyDown, onSend, disabled = false }) => {
             onKeyDown?.(e);
           }}
           disabled={isDisabled}
-          placeholder={`Ask ${model} anything...`}
+          placeholder={
+            model ? `Ask ${model} anything...` : "Select a model to get started..."
+          }
           className="w-full bg-transparent px-2 sm:px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none dark:text-white/90 dark:placeholder:text-white/40"
         />
 

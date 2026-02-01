@@ -20,14 +20,14 @@ LexiconAI is a full-stack AI chat platform similar to ChatGPT, supporting multip
 * **Database**: MongoDB with Mongoose
 * **Auth**: NextAuth
 * **Encryption**: AES-GCM
-* **AI Integration**: Custom proxy services for OpenAI, Claude, and Perplexity
+* **AI Integration**: Custom proxy services for OpenAI, Claude, Perplexity, and Gemini
 
 ## Installation
 
 1. Clone the repository:
 
 ```cd
-git clone https://github.com/amanvermadev/lexiconai.git
+git clone https://github.com/amanvermaweb/lexiconai.git
 cd lexiconai
 ```
 
@@ -44,13 +44,36 @@ NEXTAUTH_SECRET=your-secret
 NEXTAUTH_URL=http://localhost:3000
 MONGODB_URI=your-mongodb-uri
 ENCRYPTION_KEY=32-byte-key
+GITHUB_ID=your-github-client-id
+GITHUB_SECRET=your-github-client-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
-4. Run the development server:
+## Authentication notes
+
+LexiconAI supports:
+
+* **Email + password** via NextAuth Credentials provider (stored in MongoDB).
+* **GitHub OAuth** via NextAuth GitHub provider.
+* **Google OAuth** via NextAuth Google provider.
+
+To enable Google sign-in, create a Google OAuth app in the Google Cloud Console, add the callback URL
+`http://localhost:3000/api/auth/callback/google`, and set the Google client ID/secret in `.env.local`.
+For GitHub, use `http://localhost:3000/api/auth/callback/github` as the callback URL.
+
+1. Run the development server:
 
 ```cd
 npm run dev
 ```
+
+## Deployment checklist
+
+* Set production env vars (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `MONGODB_URI`, `ENCRYPTION_KEY`, `GITHUB_ID`, `GITHUB_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
+* Update OAuth callback URLs to your production domain.
+* Run `npm run build` and confirm it succeeds.
+* Deploy with Node.js 18+ and ensure your host can reach MongoDB.
 
 ## API Key Handling
 

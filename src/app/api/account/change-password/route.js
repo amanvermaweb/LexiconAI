@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { connectDB } from "@/server/lib/mongodb";
-import Chat from "@/server/models/Chat";
-import Message from "@/server/models/Message";
 import { authOptions } from "@/server/lib/auth";
 
-export async function GET() {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.email || session?.user?.id || session?.user?.name;
@@ -14,20 +11,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    await connectDB();
-
-    const [chatsCount, messagesCount] = await Promise.all([
-      Chat.countDocuments({ userId }),
-      Message.countDocuments({ userId }),
-    ]);
-
     return NextResponse.json({
-      chatsCount,
-      messagesCount,
+      message:
+        "Password changes are managed by your OAuth provider. Please update it in GitHub.",
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error?.message || "Failed to load usage." },
+      { error: error?.message || "Failed to process request." },
       { status: 500 }
     );
   }

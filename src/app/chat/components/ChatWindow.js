@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
+import { useModel } from "@/context/ModelContext";
 
 const ChatWindow = () => {
   const params = useParams();
@@ -12,6 +13,7 @@ const ChatWindow = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState(null);
+  const { model } = useModel();
 
   const bottomRef = useRef(null);
 
@@ -59,15 +61,8 @@ const ChatWindow = () => {
     setIsSending(true);
     setError(null);
 
-    const apiKey =
-      typeof window !== "undefined"
-        ? localStorage.getItem("lexicon_api_key")
-        : null;
-    const model =
-      typeof window !== "undefined" ? localStorage.getItem("model") : null;
-
-    if (!apiKey) {
-      setError("Add your API key in Settings → Models to continue.");
+    if (!model) {
+      setError("Select a model after saving an API key.");
       setIsSending(false);
       return false;
     }
@@ -81,8 +76,7 @@ const ChatWindow = () => {
         body: JSON.stringify({
           chatId,
           message: content,
-          apiKey,
-          model: model || "gpt",
+          model,
         }),
       });
 
