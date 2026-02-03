@@ -85,10 +85,17 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
         throw new Error(payload?.error || "Unable to save API key.");
       }
 
-      setStatus({
-        type: "success",
-        message: `Saved ${provider} key ending in ${payload?.lastFour || "••••"}.`,
-      });
+      if (payload?.warning) {
+        setStatus({
+          type: "warning",
+          message: `Saved ${provider} key ending in ${payload?.lastFour || "••••"}. ${payload.warning}`,
+        });
+      } else {
+        setStatus({
+          type: "success",
+          message: `Saved ${provider} key ending in ${payload?.lastFour || "••••"}.`,
+        });
+      }
       await loadSavedKeys();
     } catch (error) {
       setStatus({
@@ -137,7 +144,7 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
           Provider
         </label>
         <select
-          className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 outline-none transition hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/8 dark:focus-visible:ring-offset-zinc-950 hover:cursor-pointer"
+          className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-zinc-900 outline-none transition hover:bg-(--surface-1) focus-visible:ring-2 focus-visible:ring-(--ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--surface-0) dark:text-white hover:cursor-pointer"
           value={provider}
           onChange={(event) => setProvider(event.target.value)}
         >
@@ -159,7 +166,7 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
         </label>
         <input
           placeholder="Enter your API key"
-          className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-slate-100 dark:border-white/15 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/40 dark:hover:bg-white/8"
+          className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-(--surface-1) dark:text-white/90 dark:placeholder:text-white/40"
           type="password"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
@@ -171,7 +178,7 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
           {`Saved ${provider} key ending in ${activeStatus.lastFour}.`}
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white/60">
+  <div className="rounded-2xl border border-(--border) surface-soft px-4 py-3 text-sm text-slate-600 shadow-sm dark:text-white/60">
           {loadingKeys
             ? "Checking saved keys..."
             : "No saved key for this provider yet."}
@@ -182,7 +189,7 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="w-full rounded-2xl bg-linear-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white text-sm font-semibold shadow-sm transition py-3 disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full rounded-2xl bg-linear-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white text-sm font-semibold shadow-sm transition py-3 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
       >
         {saving ? "Saving..." : "Save API key"}
       </button>
@@ -201,7 +208,7 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
             return (
               <div
                 key={option.id}
-                className="flex items-center justify-between rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-3 text-sm text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70"
+                className="flex items-center justify-between rounded-2xl border border-(--border) surface-soft px-4 py-3 text-sm text-slate-700 dark:text-white/70"
               >
                 <div>
                   <div className="font-semibold text-slate-900 dark:text-white">
@@ -217,7 +224,7 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
                   type="button"
                   onClick={() => handleDelete(option.id)}
                   disabled={!saved || saving}
-                  className="rounded-xl border border-rose-200/70 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50/80 transition dark:border-rose-400/20 dark:text-rose-200 dark:hover:bg-rose-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-xl border border-rose-200/70 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50/80 transition dark:border-rose-400/20 dark:text-rose-200 dark:hover:bg-rose-500/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Delete
                 </button>
@@ -232,7 +239,9 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
           className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${
             status.type === "success"
               ? "border-emerald-200/70 bg-emerald-50/80 text-emerald-600 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-200"
-              : "border-rose-200/70 bg-rose-50/80 text-rose-600 dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-200"
+              : status.type === "warning"
+                ? "border-amber-200/70 bg-amber-50/80 text-amber-700 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-200"
+                : "border-rose-200/70 bg-rose-50/80 text-rose-600 dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-200"
           }`}
         >
           {status.message}

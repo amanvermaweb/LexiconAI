@@ -6,7 +6,7 @@ import LanguageSelector from "../components/LanguageSelector";
 const GeneralPage = () => {
 
   return (
-    <div className="space-y-8 p-6">
+  <div className="space-y-8 p-4 sm:p-6">
       <div>
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
           General
@@ -16,7 +16,7 @@ const GeneralPage = () => {
         </p>
       </div>
 
-      <section className="rounded-3xl border border-slate-200/70 bg-white/80 p-5 backdrop-blur-xl space-y-4 dark:border-white/10 dark:bg-white/5">
+  <section className="rounded-3xl border border-(--border) surface-card p-5 space-y-4">
         <ThemeToggle />
         <LanguageSelector />
       </section>

@@ -44,7 +44,7 @@ const SignIn = () => {
   };
   return (
     <div className="relative min-h-dvh flex items-center justify-center bg-transparent text-slate-900 dark:text-white overflow-hidden px-4 py-6">
-      <div className="w-full max-w-md rounded-3xl border border-slate-200/70 bg-white/80 p-6 sm:p-8 shadow-[0_18px_60px_rgba(0,0,0,0.15)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:shadow-[0_18px_60px_rgba(0,0,0,0.35)]">
+  <div className="w-full max-w-md rounded-3xl border border-(--border) surface-panel p-6 sm:p-8">
         <div className="text-center">
           <h1 className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-indigo-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
             LexiconAI
@@ -64,7 +64,7 @@ const SignIn = () => {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-slate-100 dark:border-white/15 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/40 dark:hover:bg-white/8"
+              className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-(--surface-1) dark:text-white/90 dark:placeholder:text-white/40"
               required
             />
           </div>
@@ -77,7 +77,7 @@ const SignIn = () => {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Enter your password"
-              className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-slate-100 dark:border-white/15 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/40 dark:hover:bg-white/8"
+              className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-(--surface-1) dark:text-white/90 dark:placeholder:text-white/40"
               required
             />
           </div>
@@ -102,7 +102,7 @@ const SignIn = () => {
           <button
             type="button"
             onClick={() => handleProviderSignIn("google")}
-            className="w-full py-3 rounded-2xl border border-slate-200/70 bg-white hover:bg-slate-100 text-slate-800 text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            className="w-full py-3 rounded-2xl border border-(--border) surface-soft hover:bg-(--surface-1) text-slate-800 text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2 dark:text-white"
           >
             <Chrome size={18} />
             Continue with Google

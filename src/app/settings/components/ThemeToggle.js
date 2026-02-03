@@ -33,7 +33,7 @@ export default function ThemeToggle() {
         Theme
       </p>
 
-      <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-white/80 p-2 dark:border-white/10 dark:bg-white/5">
+  <div className="flex flex-wrap gap-2 rounded-2xl border border-(--border) surface-soft p-2">
         {THEMES.map((theme) => (
           <button
             key={theme}
@@ -42,7 +42,7 @@ export default function ThemeToggle() {
               ${
                 active === theme
                   ? "bg-linear-to-r from-blue-600 to-purple-600 text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-100/80 dark:text-white/70 dark:hover:bg-white/10 border "
+          : "text-slate-600 hover:bg-(--surface-1) dark:text-white/70 border "
               }`}
             value={theme}
           >

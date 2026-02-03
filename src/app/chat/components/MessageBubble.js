@@ -6,7 +6,7 @@ const MessageBubble = ({ role, content }) => {
   if (!content) return null;
 
   return (
-    <div className="px-4 py-2">
+    <div className="px-2 py-2 sm:px-4">
       {role === "assistant" && <AiMessage message={content} />}
       {role === "user" && <UserMessage message={content} />}
       {role === "system" && (

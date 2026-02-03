@@ -18,8 +18,8 @@ const ChatSidebar = ({ open, setOpen }) => {
     fixed md:static
     top-0 left-0
     h-dvh w-full md:w-72 lg:w-80
-    border-r border-slate-200/70 bg-white/80 backdrop-blur-xl text-slate-900
-  dark:border-white/10 dark:bg-white/5 dark:text-white
+    border-r border-(--border) surface-panel text-slate-900
+  dark:text-white
     transition-all duration-300 ease-in-out
     flex flex-col
     ${open ? "translate-x-0" : "-translate-x-full"}
@@ -34,7 +34,7 @@ const ChatSidebar = ({ open, setOpen }) => {
         ✕
       </button>
 
-      <div className="px-4 pt-5 pb-4 border-b border-slate-200/70 dark:border-white/10">
+  <div className="px-4 pt-5 pb-4 border-b border-(--border)">
         <Link href="/" className="flex w-max items-center gap-3">
           <Image
             src="/icons/logo.svg"
@@ -87,8 +87,8 @@ const ChatSidebar = ({ open, setOpen }) => {
               <Link
                 key={chat.id}
                 href={`/chat/${chat.id}`}
-                className={`truncate rounded-2xl px-3 py-2.5 transition hover:bg-slate-100/80 text-slate-700 border border-transparent dark:hover:bg-white/10 dark:text-white/90 ${
-                  chatId === chat.id ? "bg-slate-100/80 dark:bg-white/10" : ""
+                className={`truncate rounded-2xl px-3 py-2.5 transition hover:bg-(--surface-1) text-slate-700 border border-transparent dark:text-white/90 ${
+                  chatId === chat.id ? "bg-(--surface-1)" : ""
                 }`}
               >
                 {chat.title || "Untitled chat"}
@@ -97,15 +97,15 @@ const ChatSidebar = ({ open, setOpen }) => {
         </div>
       </div>
 
-      <div className="p-4 border-t border-slate-200/70 dark:border-white/10">
+      <div className="p-4 border-t border-(--border)">
         <Link
           href="/settings"
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent dark:text-white/70 dark:hover:text-white dark:hover:bg-white/10"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-(--surface-1) border border-transparent dark:text-white/70 dark:hover:text-white"
         >
           <Settings />
           <span className="text-sm font-medium">Settings</span>
         </Link>
-        <Link href="/settings/account" className="mt-3 flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/5">
+  <Link href="/settings/account" className="mt-3 flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-(--surface-1) border border-transparent dark:text-zinc-400 dark:hover:text-zinc-100">
           <div className="w-10 h-10 rounded-full bg-linear-to-tr from-slate-200 to-slate-300 border border-slate-200 overflow-hidden flex items-center justify-center dark:from-zinc-700 dark:to-zinc-600 dark:border-white/10">
             <User />
           </div>

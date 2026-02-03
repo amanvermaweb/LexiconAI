@@ -37,13 +37,12 @@ export async function POST(request) {
       );
     }
 
+    let warning = null;
+
     if (provider === "openai") {
       const validation = await validateKey(apiKey);
       if (!validation?.valid) {
-        return NextResponse.json(
-          { error: validation?.error || "Invalid API key." },
-          { status: 400 }
-        );
+        warning = validation?.error || "Unable to validate API key right now.";
       }
     }
 
@@ -62,6 +61,7 @@ export async function POST(request) {
       provider,
       message: "API key saved.",
       lastFour,
+      warning,
     });
   } catch (error) {
     return NextResponse.json(

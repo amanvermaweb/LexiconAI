@@ -102,37 +102,39 @@ const ChatWindow = () => {
   };
 
   return (
-    <div className="flex flex-1 flex-col min-h-[calc(100dvh-4rem-2.5rem)] w-full">
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4 pt-3 pb-32 sm:pb-28">
-        {error && (
-          <div className="mx-auto mt-4 max-w-lg rounded-2xl border border-rose-200/70 bg-rose-50/80 px-4 py-3 text-sm text-rose-600 shadow-sm dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-200">
-            {error}
-          </div>
-        )}
+    <div className="flex flex-1 min-h-0 flex-col w-full overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 pt-4 pb-6">
+        <div className="mx-auto w-full max-w-4xl">
+          {error && (
+            <div className="mx-auto mt-4 max-w-lg rounded-2xl border border-rose-200/70 bg-rose-50/80 px-4 py-3 text-sm text-rose-600 shadow-sm dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-200">
+              {error}
+            </div>
+          )}
 
-        {isLoading && messages.length === 0 && (
-          <div className="mx-auto mt-6 max-w-lg rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-3 text-sm text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white/60">
-            Loading messages...
-          </div>
-        )}
+          {isLoading && messages.length === 0 && (
+            <div className="mx-auto mt-6 max-w-lg rounded-2xl border border-(--border) surface-soft px-4 py-3 text-sm text-slate-500 shadow-sm dark:text-white/60">
+              Loading messages...
+            </div>
+          )}
 
-        {messages.length === 0 && (
-          <div className="mx-auto mt-10 max-w-lg rounded-3xl border border-slate-200/70 bg-white/80 p-8 text-center shadow-[0_18px_60px_rgba(0,0,0,0.15)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:shadow-[0_18px_60px_rgba(0,0,0,0.25)]">
-            <h3 className=" text-lg font-semibold text-slate-900 dark:text-white">
-              Start your first conversation
-            </h3>
-            <p className="mt-2 text-sm text-slate-600 dark:text-white/60">
-              Ask anything — brainstorm ideas, refactor code, or get answers
-              fast.
-            </p>
-          </div>
-        )}
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
-        ))}
-        <div ref={bottomRef} />
+          {messages.length === 0 && (
+            <div className="mx-auto mt-10 max-w-lg rounded-3xl border border-(--border) surface-panel p-6 sm:p-8 text-center">
+              <h3 className=" text-lg font-semibold text-slate-900 dark:text-white">
+                Start your first conversation
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 dark:text-white/60">
+                Ask anything — brainstorm ideas, refactor code, or get answers
+                fast.
+              </p>
+            </div>
+          )}
+          {messages.map((msg) => (
+            <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
+          ))}
+          <div ref={bottomRef} />
+        </div>
       </div>
-      <div className="flex justify-center">
+      <div className="shrink-0 border-t border-(--border) bg-transparent px-2 py-3 sm:px-6">
         <MessageInput onSend={handleSend} disabled={isSending} />
       </div>
     </div>

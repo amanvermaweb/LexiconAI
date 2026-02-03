@@ -1,11 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 const MODEL_MAP = {
-  gemini: "gemini-1.5-flash-latest",
-  "gemini-1.5-flash": "gemini-1.5-flash-latest",
-  "gemini-1.5-pro": "gemini-1.5-pro-latest",
-  "gemini-1.5-flash-latest": "gemini-1.5-flash-latest",
-  "gemini-1.5-pro-latest": "gemini-1.5-pro-latest",
+  gemini: "gemini-2.5-flash",
+  "gemini-2.5-flash": "gemini-2.5-flash",
+  "gemini-2.5-pro": "gemini-2.5-pro",
+  "gemini-2.0-flash": "gemini-2.0-flash",
+  "gemini-2.0-flash-lite": "gemini-2.0-flash-lite",
 };
 
 const resolveModel = (model) => {
@@ -22,12 +20,45 @@ const mapMessages = (messages) =>
   }));
 
 const FALLBACK_MODELS = [
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-pro-latest",
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
-  "gemini-1.0-pro",
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
 ];
+
+const listGeminiModels = async (apiKey) => {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`,
+    {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = payload?.error?.message || "Failed to list Gemini models.";
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
+  }
+
+  return payload?.models || [];
+};
+
+const pickListedModel = (models = []) => {
+  const candidates = models
+    .filter((model) => model?.supportedGenerationMethods?.includes("generateContent"))
+    .map((model) => model?.name?.replace("models/", ""))
+    .filter(Boolean);
+
+  return (
+    candidates.find((name) => name.includes("gemini-1.5")) ||
+    candidates[0] ||
+    null
+  );
+};
 
 export async function createGeminiCompletion({ apiKey, messages, model }) {
   const resolvedModel = resolveModel(model);
@@ -37,18 +68,35 @@ export async function createGeminiCompletion({ apiKey, messages, model }) {
   }
 
   try {
-    const client = new GoogleGenerativeAI(apiKey);
     const contents = mapMessages(messages);
     let activeModel = resolvedModel;
-
-    const runCompletion = async (modelName) => {
-      const geminiModel = client.getGenerativeModel({ model: modelName });
-      const result = await geminiModel.generateContent({ contents });
-      return result?.response?.text?.();
-    };
-
     let content = null;
     let lastError = null;
+
+    const runCompletion = async (modelName) => {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents }),
+        }
+      );
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message =
+          payload?.error?.message ||
+          `Gemini request failed for ${modelName}.`;
+        const error = new Error(message);
+        error.status = response.status;
+        throw error;
+      }
+
+      const text = payload?.candidates?.[0]?.content?.parts?.[0]?.text;
+      return text?.trim();
+    };
 
     try {
       content = await runCompletion(activeModel);
@@ -71,9 +119,22 @@ export async function createGeminiCompletion({ apiKey, messages, model }) {
     }
 
     if (!content) {
+      try {
+        const models = await listGeminiModels(apiKey);
+        const listedModel = pickListedModel(models);
+        if (listedModel && listedModel !== activeModel) {
+          activeModel = listedModel;
+          content = await runCompletion(activeModel);
+          lastError = null;
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!content) {
       return {
-        error:
-          lastError?.message || "No response returned from model.",
+        error: lastError?.message || "No response returned from model.",
       };
     }
 

@@ -5,6 +5,7 @@ import Chat from "@/server/models/Chat";
 import Message from "@/server/models/Message";
 import { createOpenAICompletion } from "@/server/services/openaiProxy";
 import { createGeminiCompletion } from "@/server/services/geminiProxy";
+import { createClaudeCompletion } from "@/server/services/claudeProxy";
 import UserKey from "@/server/models/UserKey";
 import { decrypt } from "@/server/lib/crypto";
 import { authOptions } from "@/server/lib/auth";
@@ -148,6 +149,12 @@ export async function POST(request) {
       });
     } else if (provider === "gemini") {
       completion = await createGeminiCompletion({
+        apiKey,
+        model,
+        messages: openAiMessages,
+      });
+    } else if (provider === "claude") {
+      completion = await createClaudeCompletion({
         apiKey,
         model,
         messages: openAiMessages,

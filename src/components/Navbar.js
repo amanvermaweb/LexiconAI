@@ -9,22 +9,24 @@ const Navbar = ({ onToggleSidebar }) => {
   const { data: session } = useSession();
 
   return (
-    <nav className="w-full sticky top-0 z-30 flex h-16 items-center justify-between gap-3 px-3 sm:px-6 border-b border-slate-200/70 bg-white/80 backdrop-blur-xl text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-white">
-      <div className="flex items-center gap-2 sm:gap-3">
+    <nav className="w-full sticky top-0 z-30 flex min-h-16 flex-wrap items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-0 border-b border-(--border) surface-soft text-slate-900 dark:text-white">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <button
           onClick={onToggleSidebar}
           className="md:hidden p-2 text-slate-700 dark:text-white"
         >
           <Menu size={20} />
         </button>
-        <ModelSelector />
+        <div className="w-full min-w-40 max-w-[70vw] sm:w-auto sm:max-w-88">
+          <ModelSelector />
+        </div>
       </div>
-      <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-end">
         {session?.user ? (
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="inline-flex items-center justify-center rounded-2xl px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 border border-slate-200/80 bg-white/70 transition hover:bg-slate-100/80 dark:text-white/90 dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10"
+            className="inline-flex items-center justify-center rounded-2xl px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 border border-(--border) surface-soft transition hover:bg-(--surface-1) dark:text-white/90"
           >
             Sign Out
           </button>
@@ -32,7 +34,7 @@ const Navbar = ({ onToggleSidebar }) => {
           <>
             <Link
               href="/signin"
-              className="inline-flex items-center justify-center rounded-2xl px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 border border-slate-200/80 bg-white/70 transition hover:bg-slate-100/80 dark:text-white/90 dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10"
+              className="inline-flex items-center justify-center rounded-2xl px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 border border-(--border) surface-soft transition hover:bg-(--surface-1) dark:text-white/90"
             >
               Sign In
             </Link>
