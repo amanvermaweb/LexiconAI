@@ -2,11 +2,12 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ModelProvider } from "../context/ModelContext";
 import AuthSessionProvider from "@/components/AuthSessionProvider";
+import { LocaleProvider } from "@/context/LocaleContext";
 
 const poppins = Poppins({
   weight: "400",
   variable: "--font-poppins",
-  subsets: ["latin"],
+  subsets: ["latin", "devanagari"],
 });
 
 export const metadata = {
@@ -39,10 +40,24 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                try {
+                  var storedLocale = localStorage.getItem("locale") || "en";
+                  document.documentElement.lang = storedLocale === "hi" ? "hi" : "en";
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className={`${poppins.variable} antialiased`}>
         <AuthSessionProvider>
-          <ModelProvider>{children}</ModelProvider>
+          <LocaleProvider>
+            <ModelProvider>{children}</ModelProvider>
+          </LocaleProvider>
         </AuthSessionProvider>
       </body>
     </html>

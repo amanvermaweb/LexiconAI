@@ -2,12 +2,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 
-const MODEL_OPTIONS = [
-  { value: "gpt-4", label: "GPT-4", provider: "openai" },
-  { value: "gpt-3.5", label: "GPT-3.5 Turbo", provider: "openai" },
-  { value: "claude-3", label: "Claude-3", provider: "claude" },
-  { value: "perplexity", label: "Perplexity", provider: "perplexity" },
-];
+const PROVIDER_LABELS = {
+  openai: "OpenAI",
+  claude: "Claude",
+  perplexity: "Perplexity",
+  gemini: "Gemini",
+};
+
+const buildFallbackOption = (provider) => ({
+  value: provider,
+  label: PROVIDER_LABELS[provider] || provider,
+  provider,
+});
 
 export default function ModelSelector({ defaultModel, setDefaultModel }) {
   const { data: session } = useSession();
@@ -16,6 +22,7 @@ export default function ModelSelector({ defaultModel, setDefaultModel }) {
   const [geminiModels, setGeminiModels] = useState([]);
   const [openAiModels, setOpenAiModels] = useState([]);
   const [claudeModels, setClaudeModels] = useState([]);
+  const [perplexityModels, setPerplexityModels] = useState([]);
 
   useEffect(() => {
     const loadProviders = async () => {
@@ -24,6 +31,7 @@ export default function ModelSelector({ defaultModel, setDefaultModel }) {
         setGeminiModels([]);
         setOpenAiModels([]);
         setClaudeModels([]);
+        setPerplexityModels([]);
         return;
       }
 
@@ -75,6 +83,24 @@ export default function ModelSelector({ defaultModel, setDefaultModel }) {
           setClaudeModels([]);
         }
 
+        if (providerList.includes("perplexity")) {
+          const perplexityResponse = await fetch("/api/perplexity/models");
+          const perplexityPayload = await perplexityResponse.json();
+
+          if (perplexityResponse.ok) {
+            const models = (perplexityPayload?.models || []).map((model) => ({
+              value: model.id,
+              label: model.displayName || model.id,
+              provider: "perplexity",
+            }));
+            setPerplexityModels(models);
+          } else {
+            setPerplexityModels([]);
+          }
+        } else {
+          setPerplexityModels([]);
+        }
+
         if (providerList.includes("gemini")) {
           const modelResponse = await fetch("/api/gemini/models");
           const modelPayload = await modelResponse.json();
@@ -100,6 +126,7 @@ export default function ModelSelector({ defaultModel, setDefaultModel }) {
         setGeminiModels([]);
         setOpenAiModels([]);
         setClaudeModels([]);
+        setPerplexityModels([]);
       } finally {
         setLoading(false);
       }
@@ -110,23 +137,33 @@ export default function ModelSelector({ defaultModel, setDefaultModel }) {
 
   const availableOptions = useMemo(() => {
     if (!providers.length) return [];
-    const baseOptions = MODEL_OPTIONS.filter((option) => providers.includes(option.provider));
     const openAiOptions = providers.includes("openai")
       ? openAiModels.length
         ? openAiModels
-        : baseOptions.filter((option) => option.provider === "openai")
+        : [buildFallbackOption("openai")]
       : [];
     const claudeOptions = providers.includes("claude")
       ? claudeModels.length
         ? claudeModels
-        : baseOptions.filter((option) => option.provider === "claude")
+        : [buildFallbackOption("claude")]
       : [];
-    const geminiOptions = providers.includes("gemini") ? geminiModels : [];
-    const otherOptions = baseOptions.filter(
-      (option) => !["openai", "claude"].includes(option.provider)
-    );
-    return [...otherOptions, ...openAiOptions, ...claudeOptions, ...geminiOptions];
-  }, [providers, geminiModels, openAiModels, claudeModels]);
+    const perplexityOptions = providers.includes("perplexity")
+      ? perplexityModels.length
+        ? perplexityModels
+        : [buildFallbackOption("perplexity")]
+      : [];
+    const geminiOptions = providers.includes("gemini")
+      ? geminiModels.length
+        ? geminiModels
+        : [buildFallbackOption("gemini")]
+      : [];
+    return [
+      ...openAiOptions,
+      ...claudeOptions,
+      ...perplexityOptions,
+      ...geminiOptions,
+    ];
+  }, [providers, geminiModels, openAiModels, claudeModels, perplexityModels]);
 
   useEffect(() => {
     if (!availableOptions.length) {

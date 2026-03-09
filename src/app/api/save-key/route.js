@@ -1,27 +1,22 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/server/lib/auth";
 import { connectDB } from "@/server/lib/mongodb";
 import { encrypt } from "@/server/lib/crypto";
 import { validateKey } from "@/server/lib/validateKey";
 import UserKey from "@/server/models/UserKey";
-
-const PROVIDERS = ["openai", "claude", "perplexity", "gemini"];
+import {
+  isSupportedProvider,
+  normalizeApiKey,
+  normalizeProvider,
+} from "@/server/lib/providers";
+import { requireSessionUser, toErrorResponse } from "@/server/lib/request";
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
+    const { userId } = await requireSessionUser();
 
     const body = await request.json();
-    const apiKey = body?.apiKey
-      ? body.apiKey.replace(/\s+/g, "").trim()
-      : null;
-    const provider = body?.provider?.toLowerCase()?.trim();
+    const apiKey = normalizeApiKey(body?.apiKey);
+    const provider = normalizeProvider(body?.provider);
 
     if (!apiKey || !provider) {
       return NextResponse.json(
@@ -30,7 +25,7 @@ export async function POST(request) {
       );
     }
 
-    if (!PROVIDERS.includes(provider)) {
+    if (!isSupportedProvider(provider)) {
       return NextResponse.json(
         { error: "Unsupported provider." },
         { status: 400 }
@@ -39,8 +34,8 @@ export async function POST(request) {
 
     let warning = null;
 
-    if (provider === "openai") {
-      const validation = await validateKey(apiKey);
+    if (["openai", "perplexity"].includes(provider)) {
+      const validation = await validateKey(apiKey, provider);
       if (!validation?.valid) {
         warning = validation?.error || "Unable to validate API key right now.";
       }
@@ -64,9 +59,6 @@ export async function POST(request) {
       warning,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to save API key." },
-      { status: 500 }
-    );
+    return toErrorResponse(error, "Failed to save API key.");
   }
 }

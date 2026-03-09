@@ -1,86 +1,144 @@
-# LexiconAI (WIP)
+# LexiconAI
 
-LexiconAI is a full-stack AI chat platform similar to ChatGPT, supporting multiple AI providers like OpenAI, Claude and Perplexity. It features real-time responses, chat histories, API key storage, and a clean modern UI built with React and Tailwind CSS.
+LexiconAI is a full-stack AI chat platform similar to ChatGPT that supports multiple AI providers such as OpenAI, Claude, Perplexity, and Gemini.  
+It features real-time responses, persistent chat history, encrypted API key storage, and a modern UI built with React and Tailwind CSS.
+
+The project demonstrates a scalable architecture for building AI chat applications using the Next.js App Router and server-side API proxies.
 
 ## Features
 
-* Multi-provider AI support
-* Real-time chat responses
-* Dynamic chat history and sidebar
-* Secure encrypted API key storage (AES-GCM)
-* Authentication via NextAuth
-* Full-stack architecture using Next.js App Router
-* MongoDB database powered by Mongoose
-* Modern UI with Tailwind CSS
+- Multi-provider AI support
+- Real-time chat responses
+- Persistent chat history with sidebar navigation
+- Secure encrypted API key storage using AES-GCM
+- Authentication using NextAuth
+- Modular API architecture with server-side proxy services
+- Modern responsive UI built with Tailwind CSS
+- MongoDB database integration with Mongoose
 
 ## Tech Stack
 
-* **Frontend**: Next.js, Tailwind CSS, JavaScript
-* **Backend**: Next.js App Router APIs, Node.js
-* **Database**: MongoDB with Mongoose
-* **Auth**: NextAuth
-* **Encryption**: AES-GCM
-* **AI Integration**: Custom proxy services for OpenAI, Claude, Perplexity, and Gemini
+### Frontend
+
+- Next.js (App Router)
+- React
+- Tailwind CSS
+
+### Backend
+
+- Next.js API routes
+- Node.js
+
+### Database
+
+- MongoDB
+- Mongoose
+
+### Authentication
+
+- NextAuth
+
+### Security
+
+- AES-GCM encryption for API keys
+
+### AI Providers
+
+- OpenAI
+- Claude
+- Perplexity
+- Gemini
 
 ## Installation
 
-1. Clone the repository:
+Clone the repository:
 
-```cd
+```bash
 git clone https://github.com/amanvermaweb/lexiconai.git
 cd lexiconai
 ```
 
-2. Install dependencies:
+Install dependencies:
 
-```cd
+```bash
 npm install
 ```
 
-3. Create `.env.local`:
+Create environment variables:
 
-```txt
-NEXTAUTH_SECRET=your-secret
-NEXTAUTH_URL=http://localhost:3000
-MONGODB_URI=your-mongodb-uri
-ENCRYPTION_KEY=32-byte-key
-GITHUB_ID=your-github-client-id
-GITHUB_SECRET=your-github-client-secret
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+```bash
+cp .env.example .env.local
 ```
 
-## Authentication notes
+## Authentication
 
-LexiconAI supports:
+LexiconAI supports the following authentication methods:
 
-* **Email + password** via NextAuth Credentials provider (stored in MongoDB).
-* **GitHub OAuth** via NextAuth GitHub provider.
-* **Google OAuth** via NextAuth Google provider.
+### Credentials Authentication
 
-To enable Google sign-in, create a Google OAuth app in the Google Cloud Console, add the callback URL
-`http://localhost:3000/api/auth/callback/google`, and set the Google client ID/secret in `.env.local`.
-For GitHub, use `http://localhost:3000/api/auth/callback/github` as the callback URL.
+Email and password accounts stored in MongoDB.
 
-1. Run the development server:
+### GitHub OAuth
 
-```cd
+Use the callback URL:
+
+```text
+http://localhost:3000/api/auth/callback/github
+```
+
+### Google OAuth
+
+Use the callback URL:
+
+```text
+http://localhost:3000/api/auth/callback/google
+```
+
+## Running the Project
+
+Start the development server:
+
+```bash
 npm run dev
 ```
 
-## Deployment checklist
+Open:
 
-* Set production env vars (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `MONGODB_URI`, `ENCRYPTION_KEY`, `GITHUB_ID`, `GITHUB_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
-* Update OAuth callback URLs to your production domain.
-* Run `npm run build` and confirm it succeeds.
-* Deploy with Node.js 18+ and ensure your host can reach MongoDB.
+```text
+http://localhost:3000
+```
 
-## API Key Handling
+## Deployment Checklist
 
-API keys are never stored in plain text. They are encrypted using AES-GCM before saving to the database.
+Before deploying:
+
+- Set production environment variables
+- Update OAuth callback URLs
+- Run production build
+
+```bash
+npm run build
+```
+
+## Security
+
+User API keys are never stored in plaintext.
+
+All keys are encrypted using **AES-GCM encryption** before being stored in the database.
 
 ## Scripts
 
-* `npm run dev` Start dev server
-* `npm run build` Create production build
-* `npm start` Run production server
+```bash
+npm run dev
+npm run build
+npm start
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the development setup, pull request checklist, and contribution guidelines.
+All participants are expected to follow [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+
+## License
+
+[MIT License](./LICENSE)

@@ -1,8 +1,41 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const resolveModel = (model) => {
-  if (!model) return "claude-3-5-sonnet-20240620";
-  return model;
+const GENERIC_MODELS = new Set(["", "claude", "claude-3"]);
+
+export async function listClaudeModels(apiKey) {
+  const response = await fetch("https://api.anthropic.com/v1/models", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = payload?.error?.message || "Failed to list Claude models.";
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
+  }
+
+  return (payload?.data || [])
+    .map((model) => ({
+      id: model?.id,
+      displayName: model?.display_name || model?.id,
+    }))
+    .filter((model) => model.id);
+}
+
+const resolveModel = async (apiKey, model) => {
+  if (model && !GENERIC_MODELS.has(model)) {
+    return model;
+  }
+
+  const models = await listClaudeModels(apiKey);
+  return models[0]?.id || null;
 };
 
 const mapMessages = (messages) =>
@@ -14,9 +47,13 @@ const mapMessages = (messages) =>
     }));
 
 export async function createClaudeCompletion({ apiKey, messages, model }) {
-  const resolvedModel = resolveModel(model);
-
   try {
+    const resolvedModel = await resolveModel(apiKey, model);
+
+    if (!resolvedModel) {
+      return { error: "Unable to resolve a Claude model right now." };
+    }
+
     const client = new Anthropic({ apiKey });
     const response = await client.messages.create({
       model: resolvedModel,

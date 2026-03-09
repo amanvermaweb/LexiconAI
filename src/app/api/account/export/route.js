@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/server/lib/auth";
 import { connectDB } from "@/server/lib/mongodb";
 import Chat from "@/server/models/Chat";
 import Message from "@/server/models/Message";
+import { requireSessionUser, toErrorResponse } from "@/server/lib/request";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
+    const { session, userId } = await requireSessionUser();
 
     await connectDB();
 
@@ -30,9 +24,6 @@ export async function GET() {
       messages,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to export data." },
-      { status: 500 }
-    );
+    return toErrorResponse(error, "Failed to export data.");
   }
 }

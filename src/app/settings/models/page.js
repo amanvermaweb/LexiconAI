@@ -9,7 +9,7 @@ const ApiKeyForm = dynamic(
 );
 
 const Page = () => {
-  const [defaultModel, setDefaultModel] = useState("gpt-4");
+  const [defaultModel, setDefaultModel] = useState("");
   const [apiKey, setApiKey] = useState("");
   return (
   <div className="p-4 sm:p-6">

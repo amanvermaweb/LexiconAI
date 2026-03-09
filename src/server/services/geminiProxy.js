@@ -1,17 +1,4 @@
-const MODEL_MAP = {
-  gemini: "gemini-2.5-flash",
-  "gemini-2.5-flash": "gemini-2.5-flash",
-  "gemini-2.5-pro": "gemini-2.5-pro",
-  "gemini-2.0-flash": "gemini-2.0-flash",
-  "gemini-2.0-flash-lite": "gemini-2.0-flash-lite",
-};
-
-const resolveModel = (model) => {
-  if (!model) return MODEL_MAP.gemini;
-  if (MODEL_MAP[model]) return MODEL_MAP[model];
-  if (model.startsWith("gemini-")) return model;
-  return null;
-};
+const GENERIC_MODELS = new Set(["", "gemini"]);
 
 const mapMessages = (messages) =>
   (messages || []).map((message) => ({
@@ -19,14 +6,7 @@ const mapMessages = (messages) =>
     parts: [{ text: message.content }],
   }));
 
-const FALLBACK_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-pro",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-];
-
-const listGeminiModels = async (apiKey) => {
+export const listGeminiModels = async (apiKey) => {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`,
     {
@@ -47,27 +27,34 @@ const listGeminiModels = async (apiKey) => {
   return payload?.models || [];
 };
 
-const pickListedModel = (models = []) => {
+const normalizeModelName = (model) => model?.name?.replace("models/", "") || model?.name;
+
+export const pickListedModel = (models = []) => {
   const candidates = models
     .filter((model) => model?.supportedGenerationMethods?.includes("generateContent"))
-    .map((model) => model?.name?.replace("models/", ""))
+    .map((model) => normalizeModelName(model))
     .filter(Boolean);
 
-  return (
-    candidates.find((name) => name.includes("gemini-1.5")) ||
-    candidates[0] ||
-    null
-  );
+  return candidates[0] || null;
+};
+
+const resolveModel = async (apiKey, model) => {
+  if (model && !GENERIC_MODELS.has(model)) {
+    return model;
+  }
+
+  const models = await listGeminiModels(apiKey);
+  return pickListedModel(models);
 };
 
 export async function createGeminiCompletion({ apiKey, messages, model }) {
-  const resolvedModel = resolveModel(model);
-
-  if (!resolvedModel) {
-    return { error: "Unsupported model. Choose a Gemini model." };
-  }
-
   try {
+    const resolvedModel = await resolveModel(apiKey, model);
+
+    if (!resolvedModel) {
+      return { error: "Unable to resolve a Gemini model right now." };
+    }
+
     const contents = mapMessages(messages);
     let activeModel = resolvedModel;
     let content = null;
@@ -102,20 +89,6 @@ export async function createGeminiCompletion({ apiKey, messages, model }) {
       content = await runCompletion(activeModel);
     } catch (error) {
       lastError = error;
-    }
-
-    if (!content) {
-      for (const fallback of FALLBACK_MODELS) {
-        if (fallback === activeModel) continue;
-        try {
-          activeModel = fallback;
-          content = await runCompletion(activeModel);
-          lastError = null;
-          break;
-        } catch (error) {
-          lastError = error;
-        }
-      }
     }
 
     if (!content) {

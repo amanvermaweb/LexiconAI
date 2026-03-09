@@ -6,8 +6,8 @@ const ModelContext = createContext(null);
 
 export const ModelProvider = ({ children }) => {
   const [model, setModel] = useState(() => {
-    if (typeof window === "undefined") return "gpt";
-    return localStorage.getItem("model") || "gpt";
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("model") || "";
   });
 
   useEffect(() => {

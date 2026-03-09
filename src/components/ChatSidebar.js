@@ -34,7 +34,7 @@ const ChatSidebar = ({ open, setOpen }) => {
         ✕
       </button>
 
-  <div className="px-4 pt-5 pb-4 border-b border-(--border)">
+      <div className="px-4 pt-5 pb-4 border-b border-(--border)">
         <Link href="/" className="flex w-max items-center gap-3">
           <Image
             src="/icons/logo.svg"
@@ -75,7 +75,6 @@ const ChatSidebar = ({ open, setOpen }) => {
             </div>
           )}
 
-
           {!isLoading && chats.length === 0 && (
             <div className="rounded-2xl px-3 py-2.5 text-slate-500 dark:text-white/60">
               No chats yet. Start a new one.
@@ -105,12 +104,17 @@ const ChatSidebar = ({ open, setOpen }) => {
           <Settings />
           <span className="text-sm font-medium">Settings</span>
         </Link>
-  <Link href="/settings/account" className="mt-3 flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-(--surface-1) border border-transparent dark:text-zinc-400 dark:hover:text-zinc-100">
+        <Link
+          href="/settings/account"
+          className="mt-3 flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-(--surface-1) border border-transparent dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
           <div className="w-10 h-10 rounded-full bg-linear-to-tr from-slate-200 to-slate-300 border border-slate-200 overflow-hidden flex items-center justify-center dark:from-zinc-700 dark:to-zinc-600 dark:border-white/10">
             <User />
           </div>
           <div className="flex-1 overflow-hidden">
-            <div className="text-md font-medium truncate text-slate-900 dark:text-white">{userName}</div>
+            <div className="text-md font-medium truncate text-slate-900 dark:text-white">
+              {userName}
+            </div>
             <div className="text-xs text-slate-500 truncate dark:text-white/50">
               Free plan
             </div>

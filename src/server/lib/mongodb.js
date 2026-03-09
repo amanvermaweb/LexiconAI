@@ -10,14 +10,25 @@ if (!cached) {
 }
 
 export async function connectDB() {
-  if (cached.conn) return cached.conn;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
+  }
+
+  if (mongoose.connection.readyState !== 1) {
+    cached.conn = null;
+    cached.promise = null;
+  }
+
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       dbName: "lexiconai"
-    }).then((mongooseInstance) => {
-      return mongooseInstance;
+    }).catch((error) => {
+      cached.promise = null;
+      throw error;
     });
   }
+
   cached.conn = await cached.promise;
+  cached.promise = null;
   return cached.conn;
 }

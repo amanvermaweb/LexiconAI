@@ -1,20 +1,21 @@
 import OpenAI from "openai";
 
-const DEFAULT_MODEL = "gpt-4o-mini";
-const GENERIC_MODELS = new Set(["", "openai", "gpt", "gpt-4", "gpt-3.5"]);
-const CHAT_MODEL_PATTERNS = [/^gpt-/, /^chatgpt-/, /^o\d/];
+const BASE_URL = "https://api.perplexity.ai";
+const DEFAULT_MODEL = "sonar";
+const GENERIC_MODELS = new Set(["", "perplexity", "sonar"]);
 
-const isChatCapableModel = (id) =>
-  CHAT_MODEL_PATTERNS.some((pattern) => pattern.test(id));
+export async function listPerplexityModels(apiKey) {
+  const client = new OpenAI({
+    apiKey,
+    baseURL: BASE_URL,
+  });
 
-export async function listOpenAIModels(apiKey) {
-  const client = new OpenAI({ apiKey });
   const response = await client.models.list();
 
   return (response?.data || [])
     .map((model) => model?.id)
     .filter(Boolean)
-    .filter((id) => isChatCapableModel(id))
+    .filter((id) => id.startsWith("sonar"))
     .map((id) => ({
       id,
       displayName: id,
@@ -26,14 +27,17 @@ const resolveModel = async (apiKey, model) => {
     return model;
   }
 
-  const models = await listOpenAIModels(apiKey);
+  const models = await listPerplexityModels(apiKey);
   return models[0]?.id || DEFAULT_MODEL;
 };
 
-export async function createOpenAICompletion({ apiKey, messages, model }) {
+export async function createPerplexityCompletion({ apiKey, messages, model }) {
   try {
     const resolvedModel = await resolveModel(apiKey, model);
-    const client = new OpenAI({ apiKey });
+    const client = new OpenAI({
+      apiKey,
+      baseURL: BASE_URL,
+    });
 
     const completion = await client.chat.completions.create({
       model: resolvedModel,

@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { connectDB } from "@/server/lib/mongodb";
 import Chat from "@/server/models/Chat";
-import { authOptions } from "@/server/lib/auth";
+import { requireSessionUser, toErrorResponse } from "@/server/lib/request";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
+    const { userId } = await requireSessionUser();
 
     await connectDB();
     const chats = await Chat.find({ userId })
@@ -27,9 +21,6 @@ export async function GET() {
 
     return NextResponse.json({ chats: payload });
   } catch (error) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to load chats." },
-      { status: 500 }
-    );
+    return toErrorResponse(error, "Failed to load chats.");
   }
 }

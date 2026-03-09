@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { connectDB } from "@/server/lib/mongodb";
 import Chat from "@/server/models/Chat";
 import Message from "@/server/models/Message";
-import { createOpenAICompletion } from "@/server/services/openaiProxy";
-import { createGeminiCompletion } from "@/server/services/geminiProxy";
-import { createClaudeCompletion } from "@/server/services/claudeProxy";
-import UserKey from "@/server/models/UserKey";
-import { decrypt } from "@/server/lib/crypto";
-import { authOptions } from "@/server/lib/auth";
+import { createHttpError, requireSessionUser, toErrorResponse } from "@/server/lib/request";
+import { resolveProviderFromModel } from "@/server/lib/providers";
+import { getDecryptedUserKey } from "@/server/lib/userKeys";
+import { createChatCompletion } from "@/server/services/chatCompletion";
+
+const CHAT_TITLE_LENGTH = 60;
+const CONTEXT_MESSAGE_LIMIT = 20;
 
 const serializeMessage = (message) => ({
   id: message._id.toString(),
@@ -17,14 +16,53 @@ const serializeMessage = (message) => ({
   createdAt: message.createdAt,
 });
 
+const toCompletionMessages = (messages) =>
+  messages.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
+
+async function findUserChat({ chatId, userId }) {
+  if (!chatId) {
+    return null;
+  }
+
+  const chat = await Chat.findOne({ _id: chatId, userId });
+
+  if (!chat) {
+    throw createHttpError("Chat not found.", 404);
+  }
+
+  return chat;
+}
+
+async function listChatMessages({ chatId, userId, limit }) {
+  const query = Message.find({ chatId, userId }).sort({ createdAt: 1 });
+
+  if (limit) {
+    query.limit(limit);
+  }
+
+  return query.lean();
+}
+
+async function ensureChat({ chatId, content, userId }) {
+  const existingChat = await findUserChat({ chatId, userId });
+
+  if (existingChat) {
+    return existingChat;
+  }
+
+  return Chat.create({
+    title: content.slice(0, CHAT_TITLE_LENGTH) || "New Chat",
+    lastMessageAt: new Date(),
+    userId,
+  });
+}
+
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
+    const { userId } = await requireSessionUser();
 
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get("chatId");
@@ -36,42 +74,25 @@ export async function GET(request) {
       );
     }
 
-    await connectDB();
-
-    const chat = await Chat.findOne({ _id: chatId, userId }).lean();
-
-    if (!chat) {
-      return NextResponse.json({ error: "Chat not found." }, { status: 404 });
-    }
-
-    const messages = await Message.find({ chatId, userId })
-      .sort({ createdAt: 1 })
-      .lean();
+    await findUserChat({ chatId, userId });
+    const messages = await listChatMessages({ chatId, userId });
 
     return NextResponse.json({
       chatId,
       messages: messages.map(serializeMessage),
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to load messages." },
-      { status: 500 }
-    );
+    return toErrorResponse(error, "Failed to load messages.");
   }
 }
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
+    const { userId } = await requireSessionUser();
 
     const body = await request.json();
     const content = body?.message?.trim();
-    const model = body?.model || "gpt";
+    const model = body?.model?.trim() || "";
 
     if (!content) {
       return NextResponse.json(
@@ -80,47 +101,14 @@ export async function POST(request) {
       );
     }
 
-    const resolveProvider = (modelValue) => {
-      if (!modelValue) return "openai";
-      if (modelValue.startsWith("gemini")) return "gemini";
-      if (modelValue.startsWith("claude")) return "claude";
-      if (modelValue.startsWith("perplexity")) return "perplexity";
-      return "openai";
-    };
-
-    await connectDB();
-
-    const provider = resolveProvider(model);
-    const savedKey = await UserKey.findOne({ userId, provider }).lean();
-
-    if (!savedKey?.encryptedKey) {
-      return NextResponse.json(
-        { error: `No API key saved for ${provider}.` },
-        { status: 400 }
-      );
-    }
-
-  const apiKey = decrypt(savedKey.encryptedKey).replace(/\s+/g, "");
-
-    let chat = null;
-    let chatId = body?.chatId || null;
-
-    if (chatId) {
-      chat = await Chat.findOne({ _id: chatId, userId });
-
-      if (!chat) {
-        return NextResponse.json({ error: "Chat not found." }, { status: 404 });
-      }
-    }
-
-    if (!chat) {
-      chat = await Chat.create({
-        title: content.slice(0, 60) || "New Chat",
-        lastMessageAt: new Date(),
-        userId,
-      });
-      chatId = chat._id.toString();
-    }
+    const provider = resolveProviderFromModel(model);
+    const { apiKey } = await getDecryptedUserKey({ userId, provider });
+    const chat = await ensureChat({
+      chatId: body?.chatId,
+      content,
+      userId,
+    });
+    const chatId = chat._id.toString();
 
     await Message.create({
       chatId,
@@ -129,42 +117,18 @@ export async function POST(request) {
       content,
     });
 
-    const contextMessages = await Message.find({ chatId, userId })
-      .sort({ createdAt: 1 })
-      .limit(20)
-      .lean();
+    const contextMessages = await listChatMessages({
+      chatId,
+      userId,
+      limit: CONTEXT_MESSAGE_LIMIT,
+    });
 
-    const openAiMessages = contextMessages.map((message) => ({
-      role: message.role,
-      content: message.content,
-    }));
-
-    let completion = null;
-
-    if (provider === "openai") {
-      completion = await createOpenAICompletion({
-        apiKey,
-        model,
-        messages: openAiMessages,
-      });
-    } else if (provider === "gemini") {
-      completion = await createGeminiCompletion({
-        apiKey,
-        model,
-        messages: openAiMessages,
-      });
-    } else if (provider === "claude") {
-      completion = await createClaudeCompletion({
-        apiKey,
-        model,
-        messages: openAiMessages,
-      });
-    } else {
-      return NextResponse.json(
-        { error: `Provider ${provider} is not supported yet.` },
-        { status: 400 }
-      );
-    }
+    const completion = await createChatCompletion({
+      provider,
+      apiKey,
+      model,
+      messages: toCompletionMessages(contextMessages),
+    });
 
     if (completion?.error) {
       return NextResponse.json({ error: completion.error }, { status: 400 });
@@ -179,21 +143,16 @@ export async function POST(request) {
 
     await Chat.findByIdAndUpdate(chatId, {
       lastMessageAt: new Date(),
-      title: chat.title || content.slice(0, 60),
+      title: chat.title || content.slice(0, CHAT_TITLE_LENGTH),
     });
 
-    const messages = await Message.find({ chatId, userId })
-      .sort({ createdAt: 1 })
-      .lean();
+    const messages = await listChatMessages({ chatId, userId });
 
     return NextResponse.json({
       chatId,
       messages: messages.map(serializeMessage),
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to send message." },
-      { status: 500 }
-    );
+    return toErrorResponse(error, "Failed to send message.");
   }
 }

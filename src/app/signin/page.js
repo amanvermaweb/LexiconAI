@@ -1,16 +1,26 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { getProviders, signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Chrome, Github } from "@/components/Icons";
+import { getAuthErrorMessage } from "@/utils/authErrors";
 
 const SignIn = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState(null);
+  const [providers, setProviders] = useState({});
+  const [statusOverride, setStatusOverride] = useState(undefined);
   const [loading, setLoading] = useState(false);
+  const authError = searchParams.get("error");
+  const status = statusOverride === undefined
+    ? authError
+      ? getAuthErrorMessage(authError)
+      : null
+    : statusOverride;
 
   useEffect(() => {
     if (session?.user) {
@@ -18,14 +28,38 @@ const SignIn = () => {
     }
   }, [router, session]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProviders = async () => {
+      try {
+        const availableProviders = await getProviders();
+
+        if (isMounted) {
+          setProviders(availableProviders || {});
+        }
+      } catch {
+        if (isMounted) {
+          setProviders({});
+        }
+      }
+    };
+
+    loadProviders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleProviderSignIn = async (provider) => {
-    setStatus(null);
+    setStatusOverride(null);
     await signIn(provider, { callbackUrl: "/chat" });
   };
 
   const handleCredentialsSignIn = async (event) => {
     event.preventDefault();
-    setStatus(null);
+    setStatusOverride(null);
     setLoading(true);
 
     const result = await signIn("credentials", {
@@ -35,13 +69,21 @@ const SignIn = () => {
       callbackUrl: "/chat",
     });
 
-    if (result?.error) {
-      setStatus(result.error || "Unable to sign in.");
+    const callbackError = result?.url
+      ? new URL(result.url, window.location.origin).searchParams.get("error")
+      : null;
+
+    if (result?.error || callbackError) {
+      setStatusOverride(getAuthErrorMessage(result?.error || callbackError));
     } else {
-      router.replace("/chat");
+      router.replace(result?.url || "/chat");
     }
     setLoading(false);
   };
+
+  const showGitHub = Boolean(providers?.github);
+  const showGoogle = Boolean(providers?.google);
+
   return (
     <div className="relative min-h-dvh flex items-center justify-center bg-transparent text-slate-900 dark:text-white overflow-hidden px-4 py-6">
   <div className="w-full max-w-md rounded-3xl border border-(--border) surface-panel p-6 sm:p-8">
@@ -90,27 +132,33 @@ const SignIn = () => {
           </button>
         </form>
 
-        <div className="mt-6 space-y-3">
-          <button
-            type="button"
-            onClick={() => handleProviderSignIn("github")}
-            className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-950 text-white text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2"
-          >
-            <Github size={18} />
-            Continue with GitHub
-          </button>
-          <button
-            type="button"
-            onClick={() => handleProviderSignIn("google")}
-            className="w-full py-3 rounded-2xl border border-(--border) surface-soft hover:bg-(--surface-1) text-slate-800 text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2 dark:text-white"
-          >
-            <Chrome size={18} />
-            Continue with Google
-          </button>
-          <p className="text-center text-xs text-slate-500 dark:text-white/50">
-            OAuth sign-in keeps your account secure. Use email & password too.
-          </p>
-        </div>
+        {(showGitHub || showGoogle) && (
+          <div className="mt-6 space-y-3">
+            {showGitHub && (
+              <button
+                type="button"
+                onClick={() => handleProviderSignIn("github")}
+                className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-950 text-white text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2"
+              >
+                <Github size={18} />
+                Continue with GitHub
+              </button>
+            )}
+            {showGoogle && (
+              <button
+                type="button"
+                onClick={() => handleProviderSignIn("google")}
+                className="w-full py-3 rounded-2xl border border-(--border) surface-soft hover:bg-(--surface-1) text-slate-800 text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2 dark:text-white"
+              >
+                <Chrome size={18} />
+                Continue with Google
+              </button>
+            )}
+            <p className="text-center text-xs text-slate-500 dark:text-white/50">
+              OAuth sign-in keeps your account secure. Use email & password too.
+            </p>
+          </div>
+        )}
 
         {status && (
           <div className="mt-4 rounded-2xl border border-rose-200/70 bg-rose-50/80 px-4 py-3 text-sm text-rose-600 shadow-sm dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-200">
@@ -120,9 +168,9 @@ const SignIn = () => {
 
         <p className="text-center text-sm text-slate-600 mt-5 dark:text-white/55">
           Don’t have an account?
-          <a href="/signup" className="text-slate-900 font-semibold ml-1 hover:underline dark:text-white">
+          <Link href="/signup" className="text-slate-900 font-semibold ml-1 hover:underline dark:text-white">
             Sign Up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/server/lib/mongodb";
 import User from "@/server/models/User";
+import { getAuthErrorMessage } from "@/utils/authErrors";
 
 export async function POST(request) {
   try {
@@ -54,7 +55,7 @@ export async function POST(request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error?.message || "Failed to create account." },
+      { error: getAuthErrorMessage(error) || "Failed to create account." },
       { status: 500 }
     );
   }

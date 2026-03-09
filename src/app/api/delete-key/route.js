@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/server/lib/auth";
 import { connectDB } from "@/server/lib/mongodb";
 import UserKey from "@/server/models/UserKey";
+import { normalizeProvider } from "@/server/lib/providers";
+import { requireSessionUser, toErrorResponse } from "@/server/lib/request";
 
 export async function DELETE(request) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.email || session?.user?.id || session?.user?.name;
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
+    const { userId } = await requireSessionUser();
 
     const body = await request.json();
-    const provider = body?.provider?.toLowerCase()?.trim();
+    const provider = normalizeProvider(body?.provider);
 
     if (!provider) {
       return NextResponse.json(
@@ -36,9 +31,6 @@ export async function DELETE(request) {
 
     return NextResponse.json({ message: "API key removed." });
   } catch (error) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to delete API key." },
-      { status: 500 }
-    );
+    return toErrorResponse(error, "Failed to delete API key.");
   }
 }
