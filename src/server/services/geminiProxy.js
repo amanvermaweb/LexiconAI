@@ -1,3 +1,9 @@
+import {
+  createCompletionResult,
+  normalizeProviderError,
+  resolveRequestedModel,
+} from "@/server/services/providerUtils";
+
 const GENERIC_MODELS = new Set(["", "gemini"]);
 
 const mapMessages = (messages) =>
@@ -39,12 +45,13 @@ export const pickListedModel = (models = []) => {
 };
 
 const resolveModel = async (apiKey, model) => {
-  if (model && !GENERIC_MODELS.has(model)) {
-    return model;
-  }
-
-  const models = await listGeminiModels(apiKey);
-  return pickListedModel(models);
+  return resolveRequestedModel({
+    apiKey,
+    model,
+    genericModels: GENERIC_MODELS,
+    listModels: listGeminiModels,
+    pickModel: pickListedModel,
+  });
 };
 
 export async function createGeminiCompletion({ apiKey, messages, model }) {
@@ -81,8 +88,7 @@ export async function createGeminiCompletion({ apiKey, messages, model }) {
         throw error;
       }
 
-      const text = payload?.candidates?.[0]?.content?.parts?.[0]?.text;
-      return text?.trim();
+      return payload?.candidates?.[0]?.content?.parts?.[0]?.text;
     };
 
     try {
@@ -106,16 +112,13 @@ export async function createGeminiCompletion({ apiKey, messages, model }) {
     }
 
     if (!content) {
-      return {
-        error: lastError?.message || "No response returned from model.",
-      };
+      return lastError
+        ? normalizeProviderError(lastError)
+        : createCompletionResult(content);
     }
 
-    return { content };
+    return createCompletionResult(content);
   } catch (error) {
-    if (error?.status === 401) {
-      return { error: "Invalid API key." };
-    }
-    return { error: error?.message || "Model request failed." };
+    return normalizeProviderError(error);
   }
 }

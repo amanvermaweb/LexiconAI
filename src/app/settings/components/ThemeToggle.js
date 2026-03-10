@@ -8,8 +8,10 @@ import {
   setTheme,
   watchSystemTheme,
 } from "@/utils/theme";
+import { useLocale } from "@/context/LocaleContext";
 
 export default function ThemeToggle() {
+  const { t } = useLocale();
   const active = useSyncExternalStore(
     subscribeToTheme,
     () => getStoredTheme(),
@@ -30,7 +32,7 @@ export default function ThemeToggle() {
   return (
     <div className="space-y-2">
       <p className="text-sm font-semibold text-slate-700 dark:text-white/80">
-        Theme
+        {t("settings.theme")}
       </p>
 
   <div className="flex flex-wrap gap-2 rounded-2xl border border-(--border) surface-soft p-2">
@@ -46,7 +48,7 @@ export default function ThemeToggle() {
               }`}
             value={theme}
           >
-            {theme}
+            {t(`settings.${theme}`)}
           </button>
         ))}
       </div>

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useModel } from "@/context/ModelContext";
+import { useLocale } from "@/context/LocaleContext";
 
 const PROVIDER_LABELS = {
   openai: "OpenAI",
@@ -19,6 +20,7 @@ const buildFallbackOption = (provider) => ({
 const ModelSelector = () => {
   const { model, setModel } = useModel();
   const { data: session } = useSession();
+  const { t } = useLocale();
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [geminiModels, setGeminiModels] = useState([]);
@@ -186,7 +188,7 @@ const ModelSelector = () => {
     >
       {availableOptions.length === 0 ? (
         <option className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white" value="">
-          {loading ? "Loading models..." : "Save an API key to enable models"}
+          {loading ? t("common.loadingModels") : t("common.saveKeyToEnableModels")}
         </option>
       ) : (
         availableOptions.map((option) => (

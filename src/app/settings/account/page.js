@@ -3,9 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { User } from "@/components/Icons";
 import SecondaryBtn from "@/components/SecondaryBtn";
+import { useLocale } from "@/context/LocaleContext";
+import { localizeMessage } from "@/utils/i18n";
 
 const AccountPage = () => {
   const { data: session, status } = useSession();
+  const { locale, t } = useLocale();
   const [usage, setUsage] = useState({ chats: 0, messages: 0 });
   const [usageLoading, setUsageLoading] = useState(false);
   const [usageError, setUsageError] = useState(null);
@@ -14,11 +17,11 @@ const AccountPage = () => {
 
   const user = useMemo(() => {
     return {
-      name: session?.user?.name || "Guest",
-      email: session?.user?.email || "Sign in to view your account",
-      plan: "Free Plan",
+      name: session?.user?.name || t("settings.guest"),
+      email: session?.user?.email || t("settings.signInToViewAccount"),
+      plan: t("settings.freePlan"),
     };
-  }, [session]);
+  }, [session, t]);
 
   useEffect(() => {
     let isMounted = true;
@@ -32,7 +35,9 @@ const AccountPage = () => {
         const payload = await response.json();
 
         if (!response.ok) {
-          throw new Error(payload?.error || "Unable to load usage.");
+          throw new Error(
+            localizeMessage(payload?.error || t("settings.loadUsageError"), locale),
+          );
         }
 
         if (isMounted) {
@@ -43,7 +48,9 @@ const AccountPage = () => {
         }
       } catch (error) {
         if (isMounted) {
-          setUsageError(error?.message || "Unable to load usage.");
+          setUsageError(
+            localizeMessage(error?.message || t("settings.loadUsageError"), locale),
+          );
         }
       } finally {
         if (isMounted) {
@@ -61,7 +68,7 @@ const AccountPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [session]);
+  }, [locale, session, t]);
 
   const handleChangePassword = async () => {
     setActionStatus(null);
@@ -73,12 +80,18 @@ const AccountPage = () => {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to update password.");
+        throw new Error(
+          localizeMessage(payload?.error || t("settings.updatePasswordError"), locale),
+        );
       }
 
-      setActionStatus(payload?.message || "Password update request sent.");
+      setActionStatus(
+        localizeMessage(payload?.message || t("settings.passwordManagedByProvider"), locale),
+      );
     } catch (error) {
-      setActionStatus(error?.message || "Unable to update password.");
+      setActionStatus(
+        localizeMessage(error?.message || t("settings.updatePasswordError"), locale),
+      );
     } finally {
       setActionLoading(false);
     }
@@ -92,7 +105,9 @@ const AccountPage = () => {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to export data.");
+        throw new Error(
+          localizeMessage(payload?.error || t("settings.exportDataError"), locale),
+        );
       }
 
       const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -107,9 +122,11 @@ const AccountPage = () => {
       link.remove();
       URL.revokeObjectURL(url);
 
-      setActionStatus("Export ready. Downloading now.");
+      setActionStatus(t("settings.exportReady"));
     } catch (error) {
-      setActionStatus(error?.message || "Unable to export data.");
+      setActionStatus(
+        localizeMessage(error?.message || t("settings.exportDataError"), locale),
+      );
     } finally {
       setActionLoading(false);
     }
@@ -120,7 +137,7 @@ const AccountPage = () => {
 
     if (
       !window.confirm(
-        "Delete all your chats and messages? This cannot be undone.",
+        t("settings.deleteConfirm"),
       )
     ) {
       return;
@@ -134,13 +151,17 @@ const AccountPage = () => {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to delete account data.");
+        throw new Error(
+          localizeMessage(payload?.error || t("settings.deleteAccountError"), locale),
+        );
       }
 
-      setActionStatus("Account data deleted. Signing you out...");
+      setActionStatus(t("settings.accountDeleted"));
       await signOut({ callbackUrl: "/" });
     } catch (error) {
-      setActionStatus(error?.message || "Unable to delete account data.");
+      setActionStatus(
+        localizeMessage(error?.message || t("settings.deleteAccountError"), locale),
+      );
     } finally {
       setActionLoading(false);
     }
@@ -149,10 +170,10 @@ const AccountPage = () => {
   <div className="space-y-8 p-4 sm:p-6">
       <div>
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-          Account
+          {t("settings.account")}
         </h3>
         <p className="mt-1 text-sm text-slate-600 dark:text-white/60">
-          Manage your profile, security, and personal data.
+          {t("settings.accountDescription")}
         </p>
       </div>
 
@@ -180,7 +201,7 @@ const AccountPage = () => {
             {usageLoading ? "—" : usage.messages}
           </div>
           <div className="text-sm text-slate-600 dark:text-white/55">
-            Messages sent
+            {t("settings.messagesSent")}
           </div>
         </section>
   <section className="rounded-3xl border border-(--border) surface-card p-5">
@@ -188,7 +209,7 @@ const AccountPage = () => {
             {usageLoading ? "—" : usage.chats}
           </div>
           <div className="text-sm text-slate-600 dark:text-white/55">
-            Conversations
+            {t("settings.conversations")}
           </div>
         </section>
       </div>
@@ -202,13 +223,13 @@ const AccountPage = () => {
   <section className="rounded-3xl border border-(--border) surface-card p-5">
         <div className="space-y-3">
           <SecondaryBtn
-            content="Change Password"
+            content={t("settings.changePassword")}
             className="w-full"
             onClick={handleChangePassword}
             disabled={!session?.user || actionLoading}
           />
           <SecondaryBtn
-            content="Export Data"
+            content={t("settings.exportData")}
             className="w-full"
             onClick={handleExportData}
             disabled={!session?.user || actionLoading}
@@ -219,7 +240,7 @@ const AccountPage = () => {
             disabled={!session?.user || actionLoading}
             className="w-full rounded-2xl bg-red-500/10 hover:bg-red-500/15 border border-red-400/25 px-4 py-3 text-red-600 text-sm font-semibold transition-all duration-200 whitespace-nowrap dark:text-red-200/90 hover:cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Delete Account
+            {t("settings.deleteAccount")}
           </button>
         </div>
       </section>

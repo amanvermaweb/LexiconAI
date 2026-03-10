@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useLocale } from "@/context/LocaleContext";
+import { localizeMessage } from "@/utils/i18n";
 
 const PROVIDERS = [
   { id: "openai", label: "OpenAI (GPT)" },
@@ -10,6 +12,7 @@ const PROVIDERS = [
 
 export default function ApiKeyForm({ apiKey, setApiKey }) {
   const { data: session } = useSession();
+  const { locale, t } = useLocale();
   const [provider, setProvider] = useState(PROVIDERS[0].id);
   const [status, setStatus] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -30,7 +33,9 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to load keys.");
+        throw new Error(
+          localizeMessage(payload?.error || t("settings.loadKeysError"), locale),
+        );
       }
 
       const mapped = (payload?.providers || []).reduce((acc, entry) => {
@@ -45,12 +50,15 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
     } catch (error) {
       setStatus({
         type: "error",
-        message: error?.message || "Unable to load key status.",
+        message: localizeMessage(
+          error?.message || t("settings.loadKeyStatusError"),
+          locale,
+        ),
       });
     } finally {
       setLoadingKeys(false);
     }
-  }, [session?.user]);
+  }, [locale, session?.user, t]);
 
   useEffect(() => {
     loadSavedKeys();
@@ -60,14 +68,14 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
     setStatus(null);
 
     if (!apiKey) {
-      setStatus({ type: "error", message: "Please enter an API key." });
+      setStatus({ type: "error", message: t("settings.apiKeyRequired") });
       return;
     }
 
     if (!session?.user) {
       setStatus({
         type: "error",
-        message: "Please sign in to save API keys securely.",
+        message: t("settings.signInToSaveKeys"),
       });
       return;
     }
@@ -82,25 +90,36 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to save API key.");
+        throw new Error(
+          localizeMessage(payload?.error || t("settings.saveApiKeyError"), locale),
+        );
       }
 
       if (payload?.warning) {
         setStatus({
           type: "warning",
-          message: `Saved ${provider} key ending in ${payload?.lastFour || "••••"}. ${payload.warning}`,
+          message: `${t("settings.savedKeyEnding", {
+            provider,
+            lastFour: payload?.lastFour || "••••",
+          })} ${localizeMessage(payload.warning, locale)}`,
         });
       } else {
         setStatus({
           type: "success",
-          message: `Saved ${provider} key ending in ${payload?.lastFour || "••••"}.`,
+          message: t("settings.savedKeyEnding", {
+            provider,
+            lastFour: payload?.lastFour || "••••",
+          }),
         });
       }
       await loadSavedKeys();
     } catch (error) {
       setStatus({
         type: "error",
-        message: error?.message || "Unable to save API key.",
+        message: localizeMessage(
+          error?.message || t("settings.saveApiKeyError"),
+          locale,
+        ),
       });
     } finally {
       setSaving(false);
@@ -119,18 +138,23 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to delete API key.");
+        throw new Error(
+          localizeMessage(payload?.error || t("settings.deleteApiKeyError"), locale),
+        );
       }
 
       setStatus({
         type: "success",
-        message: `${targetProvider} key removed.`,
+        message: t("settings.removedProviderKey", { provider: targetProvider }),
       });
       await loadSavedKeys();
     } catch (error) {
       setStatus({
         type: "error",
-        message: error?.message || "Unable to delete API key.",
+        message: localizeMessage(
+          error?.message || t("settings.deleteApiKeyError"),
+          locale,
+        ),
       });
     } finally {
       setSaving(false);
@@ -141,7 +165,7 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-white/80">
-          Provider
+          {t("settings.provider")}
         </label>
         <select
           className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-zinc-900 outline-none transition hover:bg-(--surface-1) focus-visible:ring-2 focus-visible:ring-(--ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--surface-0) dark:text-white hover:cursor-pointer"
@@ -162,10 +186,10 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
 
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-white/80">
-          API key
+          {t("settings.apiKey")}
         </label>
         <input
-          placeholder="Enter your API key"
+          placeholder={t("settings.apiKeyPlaceholder")}
           className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-(--surface-1) dark:text-white/90 dark:placeholder:text-white/40"
           type="password"
           value={apiKey}
@@ -175,13 +199,16 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
 
       {activeStatus ? (
         <div className="rounded-2xl border border-emerald-200/70 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-600 shadow-sm dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-200">
-          {`Saved ${provider} key ending in ${activeStatus.lastFour}.`}
+          {t("settings.savedKeyEnding", {
+            provider,
+            lastFour: activeStatus.lastFour,
+          })}
         </div>
       ) : (
   <div className="rounded-2xl border border-(--border) surface-soft px-4 py-3 text-sm text-slate-600 shadow-sm dark:text-white/60">
           {loadingKeys
-            ? "Checking saved keys..."
-            : "No saved key for this provider yet."}
+            ? t("settings.checkingSavedKeys")
+            : t("settings.noSavedKey")}
         </div>
       )}
 
@@ -191,16 +218,16 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
         disabled={saving}
         className="w-full rounded-2xl bg-linear-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white text-sm font-semibold shadow-sm transition py-3 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
       >
-        {saving ? "Saving..." : "Save API key"}
+        {saving ? t("settings.saving") : t("settings.saveApiKey")}
       </button>
 
       <p className="text-xs text-slate-500 dark:text-white/50">
-        Your key is encrypted before it is stored. Keys are never shown again.
+        {t("settings.encryptedHint")}
       </p>
 
       <div className="space-y-2">
         <p className="text-sm font-semibold text-slate-700 dark:text-white/80">
-          Saved keys
+          {t("settings.savedKeys")}
         </p>
         <div className="space-y-2">
           {PROVIDERS.map((option) => {
@@ -216,8 +243,8 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
                   </div>
                   <div className="text-xs text-slate-500 dark:text-white/50">
                     {saved
-                      ? `Saved ••••${saved.lastFour}`
-                      : "No key saved"}
+                      ? t("settings.savedKeyMasked", { lastFour: saved.lastFour })
+                      : t("settings.noKeySaved")}
                   </div>
                 </div>
                 <button
@@ -226,7 +253,7 @@ export default function ApiKeyForm({ apiKey, setApiKey }) {
                   disabled={!saved || saving}
                   className="rounded-xl border border-rose-200/70 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50/80 transition dark:border-rose-400/20 dark:text-rose-200 dark:hover:bg-rose-500/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  Delete
+                  {t("common.delete")}
                 </button>
               </div>
             );

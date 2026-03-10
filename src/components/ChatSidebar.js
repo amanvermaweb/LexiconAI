@@ -5,13 +5,28 @@ import { useParams } from "next/navigation";
 import { MessageCircle, Settings, User } from "./Icons";
 import useChat from "@/hooks/useChat";
 import { useSession } from "next-auth/react";
+import { useLocale } from "@/context/LocaleContext";
+import { localizeMessage } from "@/utils/i18n";
 
 const ChatSidebar = ({ open, setOpen }) => {
   const params = useParams();
   const chatId = params?.chatId;
   const { chats, isLoading, error } = useChat();
   const { data: session } = useSession();
-  const userName = session?.user?.name || "Guest";
+  const { locale, t } = useLocale();
+  const userName = session?.user?.name || t("settings.guest");
+  const getChatTitle = (chat) => {
+    if (!chat?.title || chat.title === "Untitled chat") {
+      return t("chat.untitledChat");
+    }
+
+    if (chat.title === "New Chat") {
+      return t("chat.newChat");
+    }
+
+    return chat.title;
+  };
+
   return (
     <aside
       className={`
@@ -47,7 +62,7 @@ const ChatSidebar = ({ open, setOpen }) => {
               LexiconAI
             </h1>
             <span className="text-xs text-slate-500 dark:text-white/60">
-              Your AI workspace
+              {t("chat.yourWorkspace")}
             </span>
           </div>
         </Link>
@@ -59,25 +74,31 @@ const ChatSidebar = ({ open, setOpen }) => {
           className="rounded-2xl bg-linear-to-r from-blue-600 to-purple-600 px-3 py-2.5 transition cursor-pointer text-sm font-semibold flex gap-2 items-center hover:from-blue-700 hover:to-purple-700 text-white shadow-sm"
         >
           <MessageCircle />
-          New Chat
+          {t("chat.newChat")}
         </Link>
       </div>
 
       <div className="mt-6 flex-1 overflow-y-auto px-3 overflow-x-hidden">
         <h2 className="mb-2 px-1 text-sm font-semibold tracking-wide text-slate-500 dark:text-white/70">
-          History
+          {t("chat.history")}
         </h2>
 
         <div className="flex flex-col gap-2 text-sm">
-          {isLoading && (
-            <div className="rounded-2xl px-3 py-2.5 text-slate-500 dark:text-white/60">
-              Loading chats...
+          {error && !isLoading && (
+            <div className="rounded-2xl px-3 py-2.5 text-rose-600 dark:text-rose-200">
+              {localizeMessage(error, locale)}
             </div>
           )}
 
-          {!isLoading && chats.length === 0 && (
+          {isLoading && (
             <div className="rounded-2xl px-3 py-2.5 text-slate-500 dark:text-white/60">
-              No chats yet. Start a new one.
+              {t("chat.loadingChats")}
+            </div>
+          )}
+
+          {!isLoading && !error && chats.length === 0 && (
+            <div className="rounded-2xl px-3 py-2.5 text-slate-500 dark:text-white/60">
+              {t("chat.noChats")}
             </div>
           )}
 
@@ -90,7 +111,7 @@ const ChatSidebar = ({ open, setOpen }) => {
                   chatId === chat.id ? "bg-(--surface-1)" : ""
                 }`}
               >
-                {chat.title || "Untitled chat"}
+                {getChatTitle(chat)}
               </Link>
             ))}
         </div>
@@ -102,7 +123,7 @@ const ChatSidebar = ({ open, setOpen }) => {
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-(--surface-1) border border-transparent dark:text-white/70 dark:hover:text-white"
         >
           <Settings />
-          <span className="text-sm font-medium">Settings</span>
+          <span className="text-sm font-medium">{t("common.settings")}</span>
         </Link>
         <Link
           href="/settings/account"
@@ -116,7 +137,7 @@ const ChatSidebar = ({ open, setOpen }) => {
               {userName}
             </div>
             <div className="text-xs text-slate-500 truncate dark:text-white/50">
-              Free plan
+              {t("chat.freePlan")}
             </div>
           </div>
         </Link>

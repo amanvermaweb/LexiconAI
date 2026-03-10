@@ -1,22 +1,19 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/server/lib/mongodb";
 import UserKey from "@/server/models/UserKey";
-import { normalizeProvider } from "@/server/lib/providers";
-import { requireSessionUser, toErrorResponse } from "@/server/lib/request";
+import {
+  readJsonBody,
+  requireSessionUser,
+  toErrorResponse,
+} from "@/server/lib/request";
+import { parseProviderInput } from "@/server/lib/validation";
 
 export async function DELETE(request) {
   try {
     const { userId } = await requireSessionUser();
 
-    const body = await request.json();
-    const provider = normalizeProvider(body?.provider);
-
-    if (!provider) {
-      return NextResponse.json(
-        { error: "Provider is required." },
-        { status: 400 }
-      );
-    }
+    const body = await readJsonBody(request);
+    const { provider } = parseProviderInput(body);
 
     await connectDB();
 

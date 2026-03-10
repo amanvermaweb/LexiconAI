@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/server/lib/mongodb";
 import Chat from "@/server/models/Chat";
-import { requireSessionUser, toErrorResponse } from "@/server/lib/request";
+import {
+  readJsonBody,
+  requireSessionUser,
+  toErrorResponse,
+} from "@/server/lib/request";
+import { parseCreateChatInput } from "@/server/lib/validation";
 
 export async function POST(request) {
   try {
     const { userId } = await requireSessionUser();
 
-    const body = await request.json();
+    const body = await readJsonBody(request);
     await connectDB();
 
-    const title = body?.title?.trim() || "New Chat";
+    const { title } = parseCreateChatInput(body);
     const chat = await Chat.create({
       title,
       lastMessageAt: null,

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useLocale } from "@/context/LocaleContext";
 
 const PROVIDER_LABELS = {
   openai: "OpenAI",
@@ -17,6 +18,7 @@ const buildFallbackOption = (provider) => ({
 
 export default function ModelSelector({ defaultModel, setDefaultModel }) {
   const { data: session } = useSession();
+  const { t } = useLocale();
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [geminiModels, setGeminiModels] = useState([]);
@@ -178,7 +180,7 @@ export default function ModelSelector({ defaultModel, setDefaultModel }) {
   return (
     <div>
       <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-white/80">
-        Default model
+        {t("settings.defaultModel")}
       </label>
       <select
         className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-zinc-900 outline-none transition hover:bg-(--surface-1) focus-visible:ring-2 focus-visible:ring-(--ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--surface-0) dark:text-white hover:cursor-pointer"
@@ -191,7 +193,7 @@ export default function ModelSelector({ defaultModel, setDefaultModel }) {
             className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white"
             value=""
           >
-            {loading ? "Loading models..." : "Save an API key to enable models"}
+            {loading ? t("common.loadingModels") : t("common.saveKeyToEnableModels")}
           </option>
         ) : (
           availableOptions.map((option) => (

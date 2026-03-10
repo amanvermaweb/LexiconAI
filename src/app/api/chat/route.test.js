@@ -7,9 +7,16 @@ const toErrorResponse = vi.fn((error, fallbackMessage) =>
     { status: error?.status || 500 }
   )
 );
+const createErrorResponse = vi.fn((message, status = 400) =>
+  Response.json({ error: message }, { status })
+);
 const createHttpError = vi.fn((message, status = 500) =>
   Object.assign(new Error(message), { status })
 );
+const getTrimmedString = vi.fn((value) =>
+  typeof value === "string" ? value.trim() : ""
+);
+const readJsonBody = vi.fn(async (request) => request.json());
 
 const getDecryptedUserKey = vi.fn();
 const createChatCompletion = vi.fn();
@@ -22,7 +29,10 @@ const messageFind = vi.fn();
 const messageCreate = vi.fn();
 
 vi.mock("@/server/lib/request", () => ({
+  createErrorResponse,
+  getTrimmedString,
   requireSessionUser,
+  readJsonBody,
   toErrorResponse,
   createHttpError,
 }));

@@ -4,8 +4,12 @@ import SecondaryBtn from "@/components/SecondaryBtn";
 import SettingsSidebar from "./components/SettingsSidebar";
 import { useState } from "react";
 import { Menu } from "lucide-react";
+import { useLocale } from "@/context/LocaleContext";
+
 export default function SettingsLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { t } = useLocale();
+
   return (
     <div
       className={`relative flex min-h-dvh overflow-hidden bg-transparent text-slate-900 transition-all duration-300 ease-in-out dark:text-white
@@ -30,8 +34,8 @@ export default function SettingsLayout({ children }) {
               </button>
               {children}
               <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8 sm:mt-10 pt-6 border-t border-(--border)">
-                <SecondaryBtn content="Cancel" />
-                <PrimaryBtn content="Save Changes" />
+                <SecondaryBtn content={t("common.cancel")} />
+                <PrimaryBtn content={t("common.saveChanges")} />
               </div>
             </div>
           </div>

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useModel } from "@/context/ModelContext";
+import { useLocale } from "@/context/LocaleContext";
 
 const MessageInput = ({ onKeyDown, onSend, disabled = false }) => {
   const [value, setValue] = useState("");
   const [isSending, setIsSending] = useState(false);
   const { model } = useModel();
+  const { t } = useLocale();
 
   const handleSend = async () => {
     const trimmed = value.trim();
@@ -44,8 +46,8 @@ const MessageInput = ({ onKeyDown, onSend, disabled = false }) => {
           disabled={isDisabled}
           placeholder={
             model
-              ? `Ask ${model} anything...`
-              : "Select a model to get started..."
+              ? t("chat.askAnything", { model })
+              : t("chat.selectModelPlaceholder")
           }
           className="w-full bg-transparent px-2 sm:px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none dark:text-white/90 dark:placeholder:text-white/40"
         />
@@ -56,7 +58,7 @@ const MessageInput = ({ onKeyDown, onSend, disabled = false }) => {
           disabled={isDisabled}
           className="w-full shrink-0 rounded-2xl bg-linear-to-r from-blue-600 to-purple-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-purple-700 hover:cursor-pointer motion-safe:hover:scale-[1.03] motion-safe:active:scale-[0.98] sm:w-auto"
         >
-          {isSending ? "Sending..." : "Send"}
+          {isSending ? t("chat.sending") : t("chat.send")}
         </button>
       </div>
     </div>

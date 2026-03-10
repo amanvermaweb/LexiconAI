@@ -4,6 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import { useModel } from "@/context/ModelContext";
+import { useLocale } from "@/context/LocaleContext";
+import { localizeMessage } from "@/utils/i18n";
 
 const ChatWindow = () => {
   const params = useParams();
@@ -14,6 +16,7 @@ const ChatWindow = () => {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState(null);
   const { model } = useModel();
+  const { locale, t } = useLocale();
 
   const bottomRef = useRef(null);
 
@@ -42,16 +45,18 @@ const ChatWindow = () => {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to load messages.");
+        throw new Error(
+          localizeMessage(payload?.error || t("chat.loadMessagesError"), locale),
+        );
       }
 
       setMessages(payload?.messages ?? []);
     } catch (err) {
-      setError(err?.message || "Unable to load messages.");
+      setError(localizeMessage(err?.message || t("chat.loadMessagesError"), locale));
     } finally {
       setIsLoading(false);
     }
-  }, [chatId]);
+  }, [chatId, locale, t]);
 
   useEffect(() => {
     fetchMessages();
@@ -62,7 +67,7 @@ const ChatWindow = () => {
     setError(null);
 
     if (!model) {
-      setError("Select a model after saving an API key.");
+      setError(t("chat.selectModel"));
       setIsSending(false);
       return false;
     }
@@ -83,7 +88,9 @@ const ChatWindow = () => {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to send message.");
+        throw new Error(
+          localizeMessage(payload?.error || t("chat.sendMessageError"), locale),
+        );
       }
 
       setMessages(payload?.messages ?? []);
@@ -94,7 +101,7 @@ const ChatWindow = () => {
 
       return true;
     } catch (err) {
-      setError(err?.message || "Unable to send message.");
+      setError(localizeMessage(err?.message || t("chat.sendMessageError"), locale));
       return false;
     } finally {
       setIsSending(false);
@@ -113,18 +120,17 @@ const ChatWindow = () => {
 
           {isLoading && messages.length === 0 && (
             <div className="mx-auto mt-6 max-w-lg rounded-2xl border border-(--border) surface-soft px-4 py-3 text-sm text-slate-500 shadow-sm dark:text-white/60">
-              Loading messages...
+              {t("chat.loadingMessages")}
             </div>
           )}
 
           {messages.length === 0 && (
             <div className="mx-auto mt-10 max-w-lg rounded-3xl border border-(--border) surface-panel p-6 sm:p-8 text-center">
               <h3 className=" text-lg font-semibold text-slate-900 dark:text-white">
-                Start your first conversation
+                {t("chat.firstConversationTitle")}
               </h3>
               <p className="mt-2 text-sm text-slate-600 dark:text-white/60">
-                Ask anything — brainstorm ideas, refactor code, or get answers
-                fast.
+                {t("chat.firstConversationDescription")}
               </p>
             </div>
           )}

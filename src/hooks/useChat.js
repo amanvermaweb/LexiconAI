@@ -1,4 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
+import { requestJson } from "@/utils/apiClient";
+
+const EMPTY_CHATS = [];
+const LOAD_CHATS_ERROR = "Unable to load chats.";
+
+async function fetchChatList() {
+  const payload = await requestJson("/api/chats/list", {
+    defaultErrorMessage: LOAD_CHATS_ERROR,
+  });
+
+  return payload?.chats ?? EMPTY_CHATS;
+}
 
 const useChat = () => {
   const [chats, setChats] = useState([]);
@@ -8,25 +20,12 @@ const useChat = () => {
   const fetchChats = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     try {
-      const response = await fetch("/api/chats/list", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.error || "Unable to load chats.");
-      }
-
-      const payload = await response.json();
-      const nextChats = payload?.chats ?? [];
-      setChats(nextChats);
+      setChats(await fetchChatList());
     } catch (err) {
-      setError(err?.message || "Unable to load chats.");
-      setChats([]);
+      setError(err?.message || LOAD_CHATS_ERROR);
+      setChats(EMPTY_CHATS);
     } finally {
       setIsLoading(false);
     }

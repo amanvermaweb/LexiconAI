@@ -1,4 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
+import {
+  createCompletionResult,
+  normalizeProviderError,
+  resolveRequestedModel,
+} from "@/server/services/providerUtils";
 
 const GENERIC_MODELS = new Set(["", "claude", "claude-3"]);
 
@@ -30,12 +35,12 @@ export async function listClaudeModels(apiKey) {
 }
 
 const resolveModel = async (apiKey, model) => {
-  if (model && !GENERIC_MODELS.has(model)) {
-    return model;
-  }
-
-  const models = await listClaudeModels(apiKey);
-  return models[0]?.id || null;
+  return resolveRequestedModel({
+    apiKey,
+    model,
+    genericModels: GENERIC_MODELS,
+    listModels: listClaudeModels,
+  });
 };
 
 const mapMessages = (messages) =>
@@ -61,17 +66,8 @@ export async function createClaudeCompletion({ apiKey, messages, model }) {
       messages: mapMessages(messages),
     });
 
-    const content = response?.content?.[0]?.text?.trim();
-
-    if (!content) {
-      return { error: "No response returned from model." };
-    }
-
-    return { content };
+    return createCompletionResult(response?.content?.[0]?.text);
   } catch (error) {
-    if (error?.status === 401) {
-      return { error: "Invalid API key." };
-    }
-    return { error: error?.message || "Model request failed." };
+    return normalizeProviderError(error);
   }
 }

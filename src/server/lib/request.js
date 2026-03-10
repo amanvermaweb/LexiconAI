@@ -8,6 +8,29 @@ export function createHttpError(message, status = 500) {
   return error;
 }
 
+export function createErrorResponse(message, status = 400) {
+  return NextResponse.json({ error: message }, { status });
+}
+
+export function getTrimmedString(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+export function getNormalizedEmail(value) {
+  return getTrimmedString(value).toLowerCase();
+}
+
+export async function readJsonBody(
+  request,
+  fallbackMessage = "Invalid request body."
+) {
+  try {
+    return await request.json();
+  } catch {
+    throw createHttpError(fallbackMessage, 400);
+  }
+}
+
 export function getSessionUserId(session) {
   return session?.user?.email || session?.user?.id || session?.user?.name || null;
 }

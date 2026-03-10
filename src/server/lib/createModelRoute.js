@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { requireSessionUser, toErrorResponse } from "@/server/lib/request";
 import { getDecryptedUserKey } from "@/server/lib/userKeys";
 
+/**
+ * Creates a provider-specific model listing handler with consistent auth,
+ * key lookup, and error handling.
+ */
 export function createModelRoute({
   provider,
   listModels,

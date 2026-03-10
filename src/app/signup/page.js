@@ -5,10 +5,12 @@ import { getProviders, signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Chrome, Github } from "@/components/Icons";
 import { getAuthErrorMessage } from "@/utils/authErrors";
+import { useLocale } from "@/context/LocaleContext";
 
 const SignUp = () => {
   const router = useRouter();
   const { data: session } = useSession();
+  const { locale, t } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -65,7 +67,7 @@ const SignUp = () => {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Unable to create account.");
+        throw new Error(payload?.error || t("auth.createAccountError"));
       }
 
       const result = await signIn("credentials", {
@@ -80,12 +82,12 @@ const SignUp = () => {
         : null;
 
       if (result?.error || callbackError) {
-        throw new Error(getAuthErrorMessage(result?.error || callbackError));
+        throw new Error(getAuthErrorMessage(result?.error || callbackError, locale));
       }
 
       router.replace(result?.url || "/chat");
     } catch (error) {
-      setStatus(getAuthErrorMessage(error) || "Unable to create account.");
+      setStatus(getAuthErrorMessage(error, locale) || t("auth.createAccountError"));
     } finally {
       setLoading(false);
     }
@@ -102,14 +104,14 @@ const SignUp = () => {
             LexiconAI
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-white/70">
-            Create your account in seconds.
+            {t("auth.createAccount")}
           </p>
         </div>
 
         <form className="mt-7 space-y-4" onSubmit={handleCredentialsSignUp}>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700 dark:text-white/80">
-              Email
+              {t("auth.email")}
             </label>
             <input
               type="email"
@@ -122,26 +124,26 @@ const SignUp = () => {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700 dark:text-white/80">
-              Password
+              {t("auth.password")}
             </label>
             <input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Create a password"
+              placeholder={t("auth.createPasswordPlaceholder")}
               className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-(--surface-1) dark:text-white/90 dark:placeholder:text-white/40"
               required
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700 dark:text-white/80">
-              Confirm password
+              {t("auth.confirmPassword")}
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="Confirm your password"
+              placeholder={t("auth.confirmPasswordPlaceholder")}
               className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-(--surface-1) dark:text-white/90 dark:placeholder:text-white/40"
               required
             />
@@ -151,7 +153,7 @@ const SignUp = () => {
             disabled={loading}
             className="cursor-pointer w-full mt-2 py-3 rounded-2xl bg-linear-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white text-sm font-semibold shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? t("auth.creatingAccount") : t("auth.createAccountButton")}
           </button>
         </form>
 
@@ -164,7 +166,7 @@ const SignUp = () => {
                 className="cursor-pointer w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-950 text-white text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2"
               >
                 <Github size={18} />
-                Continue with GitHub
+                {t("auth.continueWithGithub")}
               </button>
             )}
             {showGoogle && (
@@ -174,11 +176,11 @@ const SignUp = () => {
                 className="w-full py-3 rounded-2xl border border-(--border) surface-soft hover:bg-(--surface-1) text-slate-800 text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2 dark:text-white"
               >
                 <Chrome size={18} />
-                Continue with Google
+                {t("auth.continueWithGoogle")}
               </button>
             )}
             <p className="text-center text-xs text-slate-500 dark:text-white/50">
-              OAuth sign-up is instant if you prefer Google or GitHub.
+              {t("auth.oauthSignUpHelp")}
             </p>
           </div>
         )}
@@ -190,9 +192,9 @@ const SignUp = () => {
         )}
 
         <p className="text-center text-sm text-slate-600 mt-5 dark:text-white/55">
-          Already have an account?
+          {t("auth.hasAccount")}
           <Link href="/signin" className="text-slate-900 font-semibold ml-1 hover:underline dark:text-white">
-            Sign In
+            {t("auth.signIn")}
           </Link>
         </p>
       </div>

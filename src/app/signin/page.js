@@ -5,11 +5,13 @@ import { getProviders, signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Chrome, Github } from "@/components/Icons";
 import { getAuthErrorMessage } from "@/utils/authErrors";
+import { useLocale } from "@/context/LocaleContext";
 
 const SignIn = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
+  const { locale, t } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [providers, setProviders] = useState({});
@@ -18,7 +20,7 @@ const SignIn = () => {
   const authError = searchParams.get("error");
   const status = statusOverride === undefined
     ? authError
-      ? getAuthErrorMessage(authError)
+      ? getAuthErrorMessage(authError, locale)
       : null
     : statusOverride;
 
@@ -74,7 +76,7 @@ const SignIn = () => {
       : null;
 
     if (result?.error || callbackError) {
-      setStatusOverride(getAuthErrorMessage(result?.error || callbackError));
+      setStatusOverride(getAuthErrorMessage(result?.error || callbackError, locale));
     } else {
       router.replace(result?.url || "/chat");
     }
@@ -92,14 +94,14 @@ const SignIn = () => {
             LexiconAI
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-white/70">
-            Welcome back — sign in to continue.
+            {t("auth.welcomeBack")}
           </p>
         </div>
 
         <form className="mt-7 space-y-4" onSubmit={handleCredentialsSignIn}>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700 dark:text-white/80">
-              Email
+              {t("auth.email")}
             </label>
             <input
               type="email"
@@ -112,13 +114,13 @@ const SignIn = () => {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700 dark:text-white/80">
-              Password
+              {t("auth.password")}
             </label>
             <input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter your password"
+              placeholder={t("auth.passwordPlaceholder")}
               className="w-full rounded-2xl border border-(--border) surface-soft px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition hover:bg-(--surface-1) dark:text-white/90 dark:placeholder:text-white/40"
               required
             />
@@ -128,7 +130,7 @@ const SignIn = () => {
             disabled={loading}
             className="w-full mt-2 py-3 rounded-2xl bg-linear-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white text-sm font-semibold shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? t("auth.signingIn") : t("auth.signIn")}
           </button>
         </form>
 
@@ -141,7 +143,7 @@ const SignIn = () => {
                 className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-950 text-white text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2"
               >
                 <Github size={18} />
-                Continue with GitHub
+                {t("auth.continueWithGithub")}
               </button>
             )}
             {showGoogle && (
@@ -151,11 +153,11 @@ const SignIn = () => {
                 className="w-full py-3 rounded-2xl border border-(--border) surface-soft hover:bg-(--surface-1) text-slate-800 text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2 dark:text-white"
               >
                 <Chrome size={18} />
-                Continue with Google
+                {t("auth.continueWithGoogle")}
               </button>
             )}
             <p className="text-center text-xs text-slate-500 dark:text-white/50">
-              OAuth sign-in keeps your account secure. Use email & password too.
+              {t("auth.oauthSignInHelp")}
             </p>
           </div>
         )}
@@ -167,9 +169,9 @@ const SignIn = () => {
         )}
 
         <p className="text-center text-sm text-slate-600 mt-5 dark:text-white/55">
-          Don’t have an account?
+          {t("auth.noAccount")}
           <Link href="/signup" className="text-slate-900 font-semibold ml-1 hover:underline dark:text-white">
-            Sign Up
+            {t("auth.signUp")}
           </Link>
         </p>
       </div>

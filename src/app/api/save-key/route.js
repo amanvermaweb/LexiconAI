@@ -4,33 +4,20 @@ import { encrypt } from "@/server/lib/crypto";
 import { validateKey } from "@/server/lib/validateKey";
 import UserKey from "@/server/models/UserKey";
 import {
-  isSupportedProvider,
-  normalizeApiKey,
-  normalizeProvider,
-} from "@/server/lib/providers";
-import { requireSessionUser, toErrorResponse } from "@/server/lib/request";
+  readJsonBody,
+  requireSessionUser,
+  toErrorResponse,
+} from "@/server/lib/request";
+import { parseProviderInput } from "@/server/lib/validation";
 
 export async function POST(request) {
   try {
     const { userId } = await requireSessionUser();
 
-    const body = await request.json();
-    const apiKey = normalizeApiKey(body?.apiKey);
-    const provider = normalizeProvider(body?.provider);
-
-    if (!apiKey || !provider) {
-      return NextResponse.json(
-        { error: "Provider and API key are required." },
-        { status: 400 }
-      );
-    }
-
-    if (!isSupportedProvider(provider)) {
-      return NextResponse.json(
-        { error: "Unsupported provider." },
-        { status: 400 }
-      );
-    }
+    const body = await readJsonBody(request);
+    const { apiKey, provider } = parseProviderInput(body, {
+      requireApiKey: true,
+    });
 
     let warning = null;
 

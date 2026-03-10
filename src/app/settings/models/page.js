@@ -2,6 +2,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import ModelSelector from "../components/ModelSelector";
+import { useLocale } from "@/context/LocaleContext";
 
 const ApiKeyForm = dynamic(
   () => import("@/app/settings/components/ApiKeyForm"),
@@ -11,15 +12,17 @@ const ApiKeyForm = dynamic(
 const Page = () => {
   const [defaultModel, setDefaultModel] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const { t } = useLocale();
+
   return (
   <div className="p-4 sm:p-6">
       <div className="space-y-8">
         <div>
           <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-            AI Model Configuration
+            {t("settings.modelsTitle")}
           </h3>
           <p className="mt-1 text-sm text-slate-600 dark:text-white/60">
-            Choose your default model and tune generation behavior.
+            {t("settings.modelsDescription")}
           </p>
         </div>
 

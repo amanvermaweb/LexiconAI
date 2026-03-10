@@ -1,4 +1,8 @@
-import OpenAI from "openai";
+import {
+  createOpenAICompatibleCompletion,
+  listOpenAICompatibleModels,
+  resolveRequestedModel,
+} from "@/server/services/providerUtils";
 
 const DEFAULT_MODEL = "gpt-4o-mini";
 const GENERIC_MODELS = new Set(["", "openai", "gpt", "gpt-4", "gpt-3.5"]);
@@ -8,50 +12,27 @@ const isChatCapableModel = (id) =>
   CHAT_MODEL_PATTERNS.some((pattern) => pattern.test(id));
 
 export async function listOpenAIModels(apiKey) {
-  const client = new OpenAI({ apiKey });
-  const response = await client.models.list();
-
-  return (response?.data || [])
-    .map((model) => model?.id)
-    .filter(Boolean)
-    .filter((id) => isChatCapableModel(id))
-    .map((id) => ({
-      id,
-      displayName: id,
-    }));
+  return listOpenAICompatibleModels({
+    apiKey,
+    filterModel: isChatCapableModel,
+  });
 }
 
 const resolveModel = async (apiKey, model) => {
-  if (model && !GENERIC_MODELS.has(model)) {
-    return model;
-  }
-
-  const models = await listOpenAIModels(apiKey);
-  return models[0]?.id || DEFAULT_MODEL;
+  return resolveRequestedModel({
+    apiKey,
+    model,
+    genericModels: GENERIC_MODELS,
+    listModels: listOpenAIModels,
+    fallbackModel: DEFAULT_MODEL,
+  });
 };
 
 export async function createOpenAICompletion({ apiKey, messages, model }) {
-  try {
-    const resolvedModel = await resolveModel(apiKey, model);
-    const client = new OpenAI({ apiKey });
-
-    const completion = await client.chat.completions.create({
-      model: resolvedModel,
-      messages,
-      temperature: 0.7,
-    });
-
-    const content = completion?.choices?.[0]?.message?.content?.trim();
-
-    if (!content) {
-      return { error: "No response returned from model." };
-    }
-
-    return { content };
-  } catch (error) {
-    if (error?.status === 401) {
-      return { error: "Invalid API key." };
-    }
-    return { error: error?.message || "Model request failed." };
-  }
+  return createOpenAICompatibleCompletion({
+    apiKey,
+    messages,
+    model,
+    resolveModel,
+  });
 }

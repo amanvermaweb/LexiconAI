@@ -4,9 +4,11 @@ import Link from "next/link";
 import ModelSelector from "./ModelSelector";
 import { Menu } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
+import { useLocale } from "@/context/LocaleContext";
 
 const Navbar = ({ onToggleSidebar }) => {
   const { data: session } = useSession();
+  const { t } = useLocale();
 
   return (
     <nav className="w-full sticky top-0 z-30 flex min-h-16 flex-wrap items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-0 border-b border-(--border) surface-soft text-slate-900 dark:text-white">
@@ -28,7 +30,7 @@ const Navbar = ({ onToggleSidebar }) => {
             onClick={() => signOut({ callbackUrl: "/" })}
             className="inline-flex items-center justify-center rounded-2xl px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 border border-(--border) surface-soft transition hover:bg-(--surface-1) dark:text-white/90"
           >
-            Sign Out
+            {t("auth.signOut")}
           </button>
         ) : (
           <>
@@ -36,13 +38,13 @@ const Navbar = ({ onToggleSidebar }) => {
               href="/signin"
               className="inline-flex items-center justify-center rounded-2xl px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 border border-(--border) surface-soft transition hover:bg-(--surface-1) dark:text-white/90"
             >
-              Sign In
+              {t("auth.signIn")}
             </Link>
             <Link
               href="/signup"
               className="inline-flex items-center justify-center rounded-2xl px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-sm transition"
             >
-              Sign Up
+              {t("auth.signUp")}
             </Link>
           </>
         )}

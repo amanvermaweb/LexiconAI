@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import Chat from "@/server/models/Chat";
 import Message from "@/server/models/Message";
-import { createHttpError, requireSessionUser, toErrorResponse } from "@/server/lib/request";
+import {
+  createErrorResponse,
+  createHttpError,
+  readJsonBody,
+  requireSessionUser,
+  toErrorResponse,
+} from "@/server/lib/request";
 import { resolveProviderFromModel } from "@/server/lib/providers";
+import { parseChatCompletionInput } from "@/server/lib/validation";
 import { getDecryptedUserKey } from "@/server/lib/userKeys";
 import { createChatCompletion } from "@/server/services/chatCompletion";
 
@@ -68,10 +75,7 @@ export async function GET(request) {
     const chatId = searchParams.get("chatId");
 
     if (!chatId) {
-      return NextResponse.json(
-        { error: "chatId is required." },
-        { status: 400 }
-      );
+      return createErrorResponse("chatId is required.");
     }
 
     await findUserChat({ chatId, userId });
@@ -90,21 +94,13 @@ export async function POST(request) {
   try {
     const { userId } = await requireSessionUser();
 
-    const body = await request.json();
-    const content = body?.message?.trim();
-    const model = body?.model?.trim() || "";
-
-    if (!content) {
-      return NextResponse.json(
-        { error: "Message content is required." },
-        { status: 400 }
-      );
-    }
+    const body = await readJsonBody(request);
+    const { chatId: requestedChatId, content, model } = parseChatCompletionInput(body);
 
     const provider = resolveProviderFromModel(model);
     const { apiKey } = await getDecryptedUserKey({ userId, provider });
     const chat = await ensureChat({
-      chatId: body?.chatId,
+      chatId: requestedChatId,
       content,
       userId,
     });
