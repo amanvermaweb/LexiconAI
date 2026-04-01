@@ -5,6 +5,7 @@ import SettingsSidebar from "./components/SettingsSidebar";
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import Link from "next/link";
 
 export default function SettingsLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,9 +34,20 @@ export default function SettingsLayout({ children }) {
                 <Menu size={20} />
               </button>
               {children}
-              <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8 sm:mt-10 pt-6 border-t border-(--border)">
-                <SecondaryBtn content={t("common.cancel")} />
-                <PrimaryBtn content={t("common.saveChanges")} />
+              <div className="flex flex-col sm:flex-row justify-between gap-3 mt-8 sm:mt-10 pt-6 border-t border-(--border)">
+                <p className="text-base text-center leading-7 ">
+                  Made with ❤️ by{" "}
+                  <Link
+                    href="https://github.com/amanvermaweb/"
+                    className="underline"
+                  >
+                    Aman Verma
+                  </Link>
+                </p>
+                <div>
+                  <SecondaryBtn content={t("common.cancel")} />
+                  <PrimaryBtn content={t("common.saveChanges")} />
+                </div>
               </div>
             </div>
           </div>
